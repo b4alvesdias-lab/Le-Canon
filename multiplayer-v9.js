@@ -134,6 +134,13 @@
         if (memberSnaps.some(snap => !snap.exists)) {
           throw new Error('Tous les joueurs doivent avoir rejoint le salon avant le lancement.');
         }
+        const setupSnaps = [];
+        for (const playerUid of playerUids) {
+          setupSnaps.push(await tx.get(roomRef.collection('game').doc('players').collection('items').doc(playerUid)));
+        }
+        if (setupSnaps.some(snap => !snap.exists || snap.data().ready !== true)) {
+          throw new Error('Chaque joueur doit avoir terminé sa préparation sur son téléphone.');
+        }
         const firstUid = state.currentPlayerUid || this.uid;
         if (!playerUids.includes(firstUid)) {
           throw new Error('Le premier joueur est invalide.');
