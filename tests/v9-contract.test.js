@@ -11,6 +11,10 @@ test('le module V9 expose ses fonctions principales', () => {
   assert.equal(typeof api.createGame, 'function');
   assert.equal(typeof api.listen, 'function');
   assert.equal(typeof api.updateOwnHand, 'function');
+  assert.equal(typeof api.saveOwnSetup, 'function');
+  assert.equal(typeof api.listenSetupPlayers, 'function');
+  assert.equal(typeof api.prepareOwnTurn, 'function');
+  assert.equal(typeof api.serializeTurnCard, 'function');
   assert.equal(typeof api.commitTurn, 'function');
   assert.equal(typeof api.finish, 'function');
   assert.equal(typeof api.stop, 'function');
