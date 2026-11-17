@@ -41,6 +41,12 @@
   function ensureLobbyControls() {
     const box = document.getElementById('online-room-message');
     if (!box) return;
+    if (!document.getElementById('v9-room-msg')) {
+      const msg = document.createElement('p');
+      msg.id = 'v9-room-msg';
+      msg.textContent = 'Connexion au salon…';
+      box.prepend(msg);
+    }
     if (!document.getElementById('v9-prepare')) {
       const prepare = document.createElement('button');
       prepare.id = 'v9-prepare';
@@ -411,22 +417,64 @@
       setupProfiles = profiles;
       refreshLobby();
     });
-    if (membersUnsub) membersUnsub();
-    membersUnsub = v8Db.collection('rooms').doc(v8RoomCode).collection('members')
-      .orderBy('joinedAt').onSnapshot(snapshot => {
-        members = snapshot.docs.map(doc => doc.data());
-        refreshLobby();
-      });
     ensureLobbyControls();
   }
 
   attachOnlineRoom = function (code) {
-    originalAttach(code);
+    detachOnlineRoomListeners();
+    v8RoomCode = code;
     state = null;
     ownPrivate = null;
     setupProfiles = [];
     members = [];
     localSetupPlayer = null;
+    document.getElementById('online-room-code').textContent = code;
+    go('p-online-lobby');
+    ensureLobbyControls();
+
+    const roomRef = v8Db.collection('rooms').doc(code);
+    v8RoomUnsub = roomRef.onSnapshot(snap => {
+      const msg = document.getElementById('v9-room-msg');
+      if (!snap.exists) {
+        if (msg) msg.textContent = 'Ce salon n’existe plus.';
+        return;
+      }
+      const room = snap.data();
+      if (msg) msg.textContent = room.status === 'waiting'
+        ? 'En attente des joueurs. Prépare ton vigneron pour rejoindre la partie.'
+        : 'La partie est en cours.';
+    }, err => {
+      const msg = document.getElementById('v9-room-msg');
+      if (msg) msg.textContent = firebaseFriendlyError(err);
+    });
+
+    v8MembersUnsub = roomRef.collection('members').orderBy('joinedAt').onSnapshot(snapshot => {
+      members = snapshot.docs.map(doc => doc.data());
+      const hostEl = document.getElementById('online-members');
+      hostEl.innerHTML = '';
+      if (!members.length) {
+        hostEl.innerHTML = '<p>Aucun joueur connecté.</p>';
+      } else {
+        members.forEach(member => {
+          const line = document.createElement('div');
+          line.className = 'online-member';
+          const dot = document.createElement('span');
+          dot.className = 'online-dot';
+          const label = document.createElement('span');
+          label.textContent = (member.name || 'Vigneron') + (member.role === 'host' ? ' — Hôte' : '');
+          line.append(dot, label);
+          hostEl.appendChild(line);
+        });
+        const count = document.createElement('p');
+        count.className = 'online-code-note';
+        count.textContent = members.length + ' / 4 joueur(s) connecté(s)';
+        hostEl.appendChild(count);
+      }
+      refreshLobby();
+    }, err => {
+      document.getElementById('online-members').textContent = firebaseFriendlyError(err);
+    });
+
     attachV9Listeners();
     ensureLobbyControls();
   };
