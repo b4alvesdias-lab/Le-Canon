@@ -148,7 +148,7 @@
         });
         tx.set(privateRef, {
           uid: this.uid,
-          hand: privateHand || {},
+          hand: privateHand ? this.serializeHand(privateHand) : { cdm: [], mat: [] },
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       });
@@ -179,7 +179,7 @@
       const ref = this.roomRef().collection('private').doc(this.uid);
       await ref.set({
         uid: this.uid,
-        hand: hand || {},
+        hand: hand ? this.serializeHand(hand) : { cdm: [], mat: [] },
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     },
