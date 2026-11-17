@@ -6,7 +6,7 @@ Cette branche est la base de travail V9. La branche `main` et le site GitHub Pag
 
 - V8 : création et accès aux salons vérifiés sur deux téléphones.
 - V9 : couche Firestore et adaptateur de données V8 ajoutés ; préparation individuelle, profils publics, mains privées, tirage privé lié à une révision et validation de carte proposée sont implémentés au niveau des modules.
-- V9 n’est PAS encore jouable en ligne : `index.html` n’appelle pas encore l’adaptateur et les fonctions de préparation/tour. Les écrans, le calcul des scores synchronisé et les tests Firebase à deux comptes restent à faire.
+- V9 est en cours d’intégration : `v9.html` charge le contrôleur et les modules V9. Le parcours complet n’a pas encore été validé dans un navigateur avec deux comptes. Les règles Firestore V9 restent un brouillon et devront être fusionnées aux règles actives avant tout test Firebase réel.
 - Les règles Firestore V9 sont un brouillon ; elles ne doivent pas être publiées.
 
 ## Schéma de travail V9
@@ -22,6 +22,8 @@ Les mains, cartes spéciales et trois cartes de tour proposées ne doivent jamai
 
 - `multiplayer-v9.js` : couche Firestore ; préparation individuelle, vérification des joueurs prêts, tirage privé persistant par révision, écoute de sa propre main et validation transactionnelle du tour.
 - `multiplayer-v9-adapter.js` : convertit les objets du moteur V8 en profils publics, état partagé et paquets privés sans publier les mains.
+- `multiplayer-v9-controller.js` : raccorde le salon, la préparation individuelle, les choix de tour, les cartes spéciales et les scores au moteur V8.
+- `v9.html` : copie de test qui charge les modules V9 ; `index.html` reste la V8 sur cette branche.
 - `docs/v9-integration-plan.md` : correspondance avec le moteur V8 et étapes d’intégration.
 - `docs/firestore-rules-v9-draft.md` : brouillon de règles correspondant au nouveau schéma.
 - `FIRESTORE_RULES_V9.txt` : ancien brouillon archivé, obsolète et à ne pas publier.
@@ -32,8 +34,8 @@ Les règles Firestore et les transactions clientes peuvent isoler les mains et b
 
 ## Prochaines étapes
 
-1. Intégrer les modules aux écrans de salon et de préparation dans une copie V9 du moteur.
-2. Brancher le lancement par l’hôte, le tirage privé, les tours et les cartes spéciales.
-3. Synchroniser les scores, les corrections manuelles et la fin de partie.
-4. Vérifier puis fusionner les règles Firestore avec les règles V8 ; tester les droits avec deux comptes anonymes.
-5. Tester les déconnexions et conflits sur deux téléphones ; publier seulement après validation.
+1. Corriger et tester le contrôleur V9 dans un navigateur ; vérifier le parcours salon → préparation → lancement.
+2. Tester sur deux téléphones les huit tours, les cartes spéciales, les scores et la fin de partie.
+3. Vérifier puis fusionner les règles Firestore avec les règles V8 ; tester les droits avec deux comptes anonymes.
+4. Corriger les déconnexions, retours arrière et conflits.
+5. Publier seulement après validation, sans remplacer la V8 avant cela.
