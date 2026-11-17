@@ -31,6 +31,13 @@ service cloud.firestore {
       return exists(path) && get(path).data.ready == true;
     }
 
+    function v9HasPrivateSetup(roomId, uid) {
+      let path = /databases/$(database)/documents/rooms/$(roomId)/private/$(uid);
+      return exists(path)
+        && get(path).data.uid == uid
+        && get(path).data.hand is map;
+    }
+
     function v9ValidCardDefinition(card) {
       return card is map
         && card.keys().hasOnly(['name', 'type', 'effet', 'played']);
@@ -285,6 +292,7 @@ service cloud.firestore {
       allow create, update: if v9IsMember(roomId)
         && request.auth.uid == playerUid
         && v9ValidSetupProfile(request.resource.data, playerUid)
+        && v9HasPrivateSetup(roomId, playerUid)
         && !exists(/databases/$(database)/documents/rooms/$(roomId)/game/state);
       allow delete: if false;
     }
