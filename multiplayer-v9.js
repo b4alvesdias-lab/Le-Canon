@@ -110,8 +110,12 @@
         const roomSnap = await tx.get(roomRef);
         const memberSnap = await tx.get(roomRef.collection('members').doc(this.uid));
         const stateSnap = await tx.get(stateRef);
+        const privateSnap = await tx.get(privateRef);
         if (!roomSnap.exists || !memberSnap.exists) {
           throw new Error('Tu ne fais pas partie de ce salon.');
+        }
+        if (!privateSnap.exists || !privateSnap.data().hand) {
+          throw new Error('La main privée de l’hôte doit être enregistrée avant le lancement.');
         }
         if (roomSnap.data().hostUid !== this.uid) {
           throw new Error('Seul l’hôte peut lancer la partie.');
@@ -153,13 +157,8 @@
           currentPlayerUid: firstUid,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        tx.set(privateRef, {
-          uid: this.uid,
-          hand: privateHand ? this.serializeHand(privateHand) : { cdm: [], mat: [] },
-          drawn: [],
-          drawnRevision: -1,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        // Chaque joueur a déjà écrit son propre document privé pendant sa préparation.
+        // L’hôte ne lit ni ne réécrit les mains des autres participants.
       });
     },
 
