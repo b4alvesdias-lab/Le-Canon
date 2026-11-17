@@ -70,6 +70,7 @@
     if (!prepare || !start) return;
     const ownReady = setupProfiles.some(p => p.uid === v8User.uid && p.ready);
     prepare.textContent = ownReady ? 'Modifier ma préparation' : 'Préparer mon vigneron';
+    prepare.style.display = state ? 'none' : 'block';
     const readyCount = setupProfiles.filter(p => p.ready).length;
     const allReady = members.length >= 2 && readyCount === members.length;
     start.style.display = v8IsHost && !state ? 'block' : 'none';
@@ -150,8 +151,12 @@
       if (profiles.some(p => !p || p.ready !== true)) {
         throw new Error('Tous les joueurs doivent avoir terminé leur préparation.');
       }
+      if (!localSetupPlayer && ownPrivate && ownPrivate.hand) {
+        const ownProfile = byUid.get(v8User.uid);
+        if (ownProfile) localSetupPlayer = adapter.hydratePlayer(ownProfile, ownPrivate, { cdm: ALL_CDM, mat: ALL_MAT });
+      }
       if (!localSetupPlayer || localSetupPlayer.mode == null) {
-        throw new Error('L’hôte doit aussi préparer son vigneron.');
+        throw new Error('L’hôte doit préparer son vigneron et charger sa main privée.');
       }
       const uids = orderedMembers.map(m => m.uid);
       G = {
@@ -182,6 +187,12 @@
   function applyPublic(next) {
     state = next;
     if (!state || !Array.isArray(state.players)) return;
+    if (v8User && !state.players.some(p => p.uid === v8User.uid)) {
+      setOnlineStatus('Cette partie a déjà commencé sans toi. Demande à l’hôte de créer un nouveau salon.', true);
+      go('p-online-lobby');
+      refreshLobby();
+      return;
+    }
     const previous = G.players || [];
     G.nb = state.players.length;
     G.players = state.players.map((p, i) => {
