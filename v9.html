@@ -335,7 +335,7 @@ hr{border:none;border-top:1px solid rgba(255,255,255,.07);margin:14px 0;}
 <div class="toast" id="toast"></div>
 
 
-<!-- Firebase V8 : authentification anonyme + Cloud Firestore -->
+<!-- Firebase V9 : authentification anonyme + Cloud Firestore -->
 <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore-compat.js"></script>
@@ -766,7 +766,7 @@ function renderGameHeader(){
       <div class="mdet">▲ ${mc.bonus} &nbsp;|&nbsp; ▼ ${mc.malus}</div>
     </div>` + (G.evenement ? `
     <div class="card" style="border-color:rgba(212,168,67,.45);background:linear-gradient(135deg,#2a1848,#1e1035);">
-      <div class="lbl" style="color:var(--gold);">🃏 ÉVÉNEMENT DE SAISON — V8</div>
+      <div class="lbl" style="color:var(--gold);">🃏 ÉVÉNEMENT DE SAISON — V9</div>
       <div class="cname">${G.evenement.name}</div>
       <p style="margin-bottom:8px;">${G.evenement.desc}</p>
       <div class="mdet" style="color:var(--gold2);font-weight:700;">${G.evenement.effet}</div>
@@ -1311,7 +1311,7 @@ function toast(msg,type){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// V8 — SALONS EN LIGNE (Firebase Authentication + Cloud Firestore)
+// V9 — SALONS EN LIGNE (Firebase Authentication + Cloud Firestore)
 // Cette première étape synchronise les salons et les présences.
 // Le moteur de partie multi-appareils sera branché ensuite.
 // ═══════════════════════════════════════════════════════════════
@@ -1542,7 +1542,7 @@ async function leaveOnlineRoom(){
 function firebaseFriendlyError(err){
   const code = err && err.code ? err.code : '';
   if(code === 'permission-denied' || code === 'firestore/permission-denied'){
-    return "Accès refusé par les règles Firestore. Il faut publier les règles V8 avant de rejoindre un salon.";
+    return "Accès refusé par les règles Firestore. Les règles V9 doivent être fusionnées aux règles des salons avant de rejoindre une partie.";
   }
   if(code === 'auth/operation-not-allowed'){
     return "La connexion anonyme n'est pas activée dans Firebase Authentication.";
