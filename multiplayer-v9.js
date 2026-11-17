@@ -156,8 +156,10 @@
         tx.set(privateRef, {
           uid: this.uid,
           hand: privateHand ? this.serializeHand(privateHand) : { cdm: [], mat: [] },
+          drawn: [],
+          drawnRevision: -1,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        }, { merge: true });
       });
     },
 
