@@ -18,6 +18,7 @@
   let membersUnsub = null;
   let preparingTurn = false;
   let submittingTurn = false;
+  let committingRevision = null;
   let renderedRevision = -1;
 
   const originalAttach = attachOnlineRoom;
@@ -202,6 +203,10 @@
   }
 
   function applyPublic(next) {
+    if (committingRevision !== null && Number(next.revision) > committingRevision) {
+      committingRevision = null;
+      submittingTurn = false;
+    }
     state = next;
     if (!state || !Array.isArray(state.players)) return;
     if (v8User && !state.players.some(p => p.uid === v8User.uid)) {
@@ -282,6 +287,13 @@
       document.getElementById('g-actions').innerHTML = '';
       document.getElementById('g-hand').innerHTML = '';
       document.getElementById('g-body').insertAdjacentHTML('beforeend', renderScoreboard());
+      go('p-game');
+      return;
+    }
+    if (submittingTurn) {
+      document.getElementById('g-body').innerHTML = '<p class="center">Validation du choix en cours…</p>';
+      document.getElementById('g-hand').innerHTML = '';
+      document.getElementById('g-actions').innerHTML = '';
       go('p-game');
       return;
     }
@@ -398,13 +410,17 @@
       toast('Tour terminé ! Les scores sont mis à jour.');
     } catch (err) {
       // La transaction a échoué : restaurer le score local et relire l’état partagé.
+      committingRevision = null;
       G.players.forEach((p, i) => Object.assign(p, scoresBefore[i]));
       G.allChosen = (state.allChosen || []).map(item => ({
         player: G.players.findIndex(p => p.uid === item.playerUid), card: item.card
       })).filter(item => item.player >= 0);
       toast(firebaseFriendlyError(err), 'warn');
     } finally {
-      submittingTurn = false;
+      if (committingRevision === null) {
+        submittingTurn = false;
+        if (state && state.status === 'playing') renderOnlineGame();
+      }
     }
   }
 
