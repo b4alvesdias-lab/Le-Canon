@@ -33,37 +33,15 @@ service cloud.firestore {
 
     function validCardDefinition(card) {
       return card is map
-        && card.keys().hasOnly(['name', 'type', 'effet', 'played'])
-        && card.keys().hasAll(['name', 'type', 'effet', 'played'])
-        && card.name is string
-        && card.type is string
-        && card.effet is string
-        && card.played is bool;
-    }
-
-    function validCardList(cards) {
-      return cards is list
-        && cards.size() <= 12
-        && (cards.size() < 1 || validCardDefinition(cards[0]))
-        && (cards.size() < 2 || validCardDefinition(cards[1]))
-        && (cards.size() < 3 || validCardDefinition(cards[2]))
-        && (cards.size() < 4 || validCardDefinition(cards[3]))
-        && (cards.size() < 5 || validCardDefinition(cards[4]))
-        && (cards.size() < 6 || validCardDefinition(cards[5]))
-        && (cards.size() < 7 || validCardDefinition(cards[6]))
-        && (cards.size() < 8 || validCardDefinition(cards[7]))
-        && (cards.size() < 9 || validCardDefinition(cards[8]))
-        && (cards.size() < 10 || validCardDefinition(cards[9]))
-        && (cards.size() < 11 || validCardDefinition(cards[10]))
-        && (cards.size() < 12 || validCardDefinition(cards[11]));
+        && card.keys().hasOnly(['name', 'type', 'effet', 'played']);
     }
 
     function validPrivateHand(hand) {
       return hand is map
         && hand.keys().hasOnly(['cdm', 'mat'])
         && hand.keys().hasAll(['cdm', 'mat'])
-        && validCardList(hand.cdm)
-        && validCardList(hand.mat);
+        && hand.cdm is list && hand.cdm.size() <= 12
+        && hand.mat is list && hand.mat.size() <= 12;
     }
 
     function validDrawn(cards) {
@@ -76,12 +54,7 @@ service cloud.firestore {
 
     function validTurnCard(card) {
       return card is map
-        && card.keys().hasOnly(['name', 'bonus', 'malus', 'assoc'])
-        && card.keys().hasAll(['name', 'bonus', 'malus', 'assoc'])
-        && card.name is string
-        && card.bonus is string
-        && card.malus is string
-        && card.assoc is string;
+        && card.keys().hasOnly(['name', 'bonus', 'malus', 'assoc']);
     }
 
     function validPrivateData(data, uid) {
@@ -98,31 +71,19 @@ service cloud.firestore {
 
     function validTrait(trait) {
       return trait is map
-        && trait.keys().hasOnly(['name', 'desc', 'bonus', 'malus', 'assoc'])
-        && trait.keys().hasAll(['name', 'desc', 'bonus', 'malus', 'assoc'])
-        && trait.name is string
-        && trait.desc is string
-        && trait.bonus is string
-        && trait.malus is string
-        && trait.assoc is string;
+        && trait.keys().hasOnly(['name', 'desc', 'bonus', 'malus', 'assoc']);
     }
 
     function validMode(mode) {
       return mode is map
-        && mode.keys().hasOnly(['name', 'bonus', 'malus', 'assoc'])
-        && mode.keys().hasAll(['name', 'bonus', 'malus', 'assoc'])
-        && mode.name is string
-        && mode.bonus is string
-        && mode.malus is string
-        && mode.assoc is string;
+        && mode.keys().hasOnly(['name', 'bonus', 'malus', 'assoc']);
     }
 
     function validPublicPlayer(player) {
       return player is map
         && player.keys().hasOnly(['uid', 'name', 'cepage', 'terroir', 'mode', 'q', 'a', 'r'])
-        && player.keys().hasAll(['uid', 'name', 'cepage', 'terroir', 'mode', 'q', 'a', 'r'])
         && player.uid is string
-        && player.name is string && player.name.size() <= 24
+        && player.name is string
         && validTrait(player.cepage)
         && validTrait(player.terroir)
         && validMode(player.mode)
@@ -168,20 +129,14 @@ service cloud.firestore {
 
     function validMeteo(meteo) {
       return meteo is map
-        && meteo.keys().hasOnly(['name', 'bonus', 'malus'])
-        && meteo.keys().hasAll(['name', 'bonus', 'malus'])
-        && meteo.name is string && meteo.bonus is string && meteo.malus is string;
+        && meteo.keys().hasOnly(['name', 'bonus', 'malus']);
     }
 
     function validEvent(event) {
       return event is map
         && event.keys().hasOnly(['name', 'desc', 'effet', 'delta'])
-        && event.keys().hasAll(['name', 'desc', 'effet', 'delta'])
-        && event.name is string && event.desc is string && event.effet is string
         && event.delta is map
-        && event.delta.keys().hasOnly(['q', 'a', 'r'])
-        && event.delta.keys().hasAll(['q', 'a', 'r'])
-        && event.delta.q is number && event.delta.a is number && event.delta.r is number;
+        && event.delta.keys().hasOnly(['q', 'a', 'r']);
     }
 
     function validChosen(chosen, players) {
@@ -202,7 +157,7 @@ service cloud.firestore {
     function validChosenItem(item, players) {
       return item is map
         && item.keys().hasOnly(['playerUid', 'card'])
-        && item.keys().hasAll(['playerUid', 'card'])
+        && item.playerUid is string
         && hasPlayer(players, item.playerUid)
         && validTurnCard(item.card);
     }
@@ -210,11 +165,6 @@ service cloud.firestore {
     function validGameState(data) {
       return data is map
         && data.keys().hasOnly([
-          'schemaVersion', 'status', 'revision', 'currentPlayerUid',
-          'players', 'saisonIdx', 'tourInSaison', 'meteo',
-          'evenement', 'allChosen', 'turnStatus', 'updatedAt'
-        ])
-        && data.keys().hasAll([
           'schemaVersion', 'status', 'revision', 'currentPlayerUid',
           'players', 'saisonIdx', 'tourInSaison', 'meteo',
           'evenement', 'allChosen', 'turnStatus', 'updatedAt'
