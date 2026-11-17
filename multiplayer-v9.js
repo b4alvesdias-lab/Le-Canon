@@ -262,6 +262,65 @@
       }, { merge: true });
     },
 
+    async commitAction(expectedRevision, nextPublicState, action) {
+      const roomRef = this.roomRef();
+      const stateRef = roomRef.collection('game').doc('state');
+      const privateRef = roomRef.collection('private').doc(this.uid);
+      const actionRef = roomRef.collection('actions').doc();
+      const nextState = nextPublicState || {};
+      this.assertPublicData(nextState, 'state');
+
+      return this.db.runTransaction(async tx => {
+        const roomSnap = await tx.get(roomRef);
+        const memberSnap = await tx.get(roomRef.collection('members').doc(this.uid));
+        const stateSnap = await tx.get(stateRef);
+        const privateSnap = await tx.get(privateRef);
+        if (!roomSnap.exists || !memberSnap.exists || !stateSnap.exists || !privateSnap.exists) {
+          throw new Error('Partie, joueur ou main introuvable.');
+        }
+        const current = stateSnap.data();
+        if (current.status !== 'playing' || current.currentPlayerUid !== this.uid) {
+          throw new Error('Ce n’est pas ton tour.');
+        }
+        if (Number(current.revision) !== Number(expectedRevision)) {
+          throw new Error('La partie a changé sur un autre téléphone. Actualise et réessaie.');
+        }
+        if (nextState.currentPlayerUid !== this.uid) {
+          throw new Error('Une action spéciale ne doit pas changer le joueur actif.');
+        }
+        const privateData = privateSnap.data();
+        const special = action && action.specialCard;
+        if (special) {
+          const group = special.type === 'cdm' ? 'cdm' : special.type === 'mat' ? 'mat' : null;
+          if (!group) throw new Error('Type de carte spéciale invalide.');
+          const cards = privateData.hand && Array.isArray(privateData.hand[group]) ? privateData.hand[group] : [];
+          const card = cards.find(item => item.name === special.name && item.played !== true);
+          if (!card) throw new Error('Cette carte spéciale est absente ou déjà jouée.');
+          card.played = true;
+          tx.set(privateRef, {
+            hand: privateData.hand,
+            drawn: privateData.drawn || [],
+            drawnRevision: Number(privateData.drawnRevision),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
+        tx.update(stateRef, {
+          ...nextState,
+          schemaVersion: 9,
+          status: 'playing',
+          revision: Number(current.revision) + 1,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        tx.set(actionRef, {
+          by: this.uid,
+          type: String(action && action.type || 'action').slice(0, 40),
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          summary: String(action && action.summary || '').slice(0, 160)
+        });
+        return Number(current.revision) + 1;
+      });
+    },
+
     async commitTurn(expectedRevision, nextPublicState, action) {
       const roomRef = this.roomRef();
       const stateRef = roomRef.collection('game').doc('state');
