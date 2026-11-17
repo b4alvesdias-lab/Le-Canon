@@ -27,6 +27,7 @@ Les mains, cartes spéciales et trois cartes de tour proposées ne doivent jamai
 - `v9.html` : copie de test qui charge les modules V9 ; `index.html` reste la V8 sur cette branche.
 - `docs/v9-integration-plan.md` : correspondance avec le moteur V8 et étapes d’intégration.
 - `firestore.v9.rules` : règles de test complètes pour l’émulateur, avec des règles racine V8 simplifiées ; ne pas les publier.
+- `firebase.emulator.json` : configuration explicitement réservée aux tests CI, non utilisée comme configuration de déploiement Firebase.
 - `FIRESTORE_V9_MERGE_FRAGMENT.txt` : fonctions et sous-chemins V9 à fusionner dans le ruleset V8 actif, sans remplacer les règles des salons.
 - `docs/v9-live-deployment.md` : procédure guidée pour préparer le test sur le vrai projet Firebase.
 - `docs/firestore-rules-v9-draft.md` : explication historique et avertissements sur la fusion des règles.
