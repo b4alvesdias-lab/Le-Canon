@@ -100,15 +100,21 @@
       if (!v8User) await ensureOnlineUser();
       mp.configure(v8Db, v8RoomCode, v8User.uid);
       const member = members.find(m => m.uid === v8User.uid);
-      const p = {
-        name: member && member.name ? member.name : onlinePlayerName(),
-        cepage: rand(CEPAGES),
-        terroir: rand(TERROIRS),
-        mode: null,
-        q: 0, a: 0, r: 0,
-        cdm: pickN(ALL_CDM, 3).map(c => ({ ...c, played: false })),
-        mat: pickN(ALL_MAT, 3).map(c => ({ ...c, played: false }))
-      };
+      const savedProfile = setupProfiles.find(profile => profile.uid === v8User.uid);
+      let p;
+      if (savedProfile && ownPrivate && ownPrivate.hand) {
+        p = adapter.hydratePlayer(savedProfile, ownPrivate, { cdm: ALL_CDM, mat: ALL_MAT });
+      } else {
+        p = {
+          name: member && member.name ? member.name : onlinePlayerName(),
+          cepage: rand(CEPAGES),
+          terroir: rand(TERROIRS),
+          mode: null,
+          q: 0, a: 0, r: 0,
+          cdm: pickN(ALL_CDM, 3).map(c => ({ ...c, played: false })),
+          mat: pickN(ALL_MAT, 3).map(c => ({ ...c, played: false }))
+        };
+      }
       localSetupPlayer = p;
       G.nb = 1;
       G.players = [p];
