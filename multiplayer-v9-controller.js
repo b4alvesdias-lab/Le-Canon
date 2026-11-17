@@ -157,11 +157,11 @@
     try {
       if (!v8IsHost) throw new Error('Seul l’hôte peut lancer la partie.');
       // La requête Firestore est déjà ordonnée par joinedAt : conserver cet ordre exact.
+      const orderedMembers = [...members];
       if (orderedMembers.length < 2 || orderedMembers.length > 4) {
         throw new Error('Il faut entre 2 et 4 joueurs dans le salon.');
       }
       const byUid = new Map(setupProfiles.map(p => [p.uid, p]));
-      const orderedMembers = [...members];
       const profiles = orderedMembers.map(m => byUid.get(m.uid));
       if (profiles.some(p => !p || p.ready !== true)) {
         throw new Error('Tous les joueurs doivent avoir terminé leur préparation.');
