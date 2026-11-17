@@ -96,3 +96,10 @@ test('une main sérialisée peut retrouver sa logique locale depuis le catalogue
   assert.equal(restored.mat[0].played, true);
   assert.equal(typeof restored.mat[0].appliquer, 'function');
 });
+
+test('les cartes de tour privées sont sérialisées sans propriétés parasites', () => {
+  const card = { name: 'Taille équilibrée', bonus: '+1 qualité', malus: 'Aucun', assoc: 'Bio', secret: 'non' };
+  assert.deepEqual(api.serializeTurnCard(card), {
+    name: 'Taille équilibrée', bonus: '+1 qualité', malus: 'Aucun', assoc: 'Bio'
+  });
+});
