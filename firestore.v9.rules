@@ -1,0 +1,287 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function memberPath(roomId, uid) {
+      return /databases/$(database)/documents/rooms/$(roomId)/members/$(uid);
+    }
+
+    function isMember(roomId) {
+      return signedIn()
+        && exists(memberPath(roomId, request.auth.uid));
+    }
+
+    function isHost(roomId) {
+      return isMember(roomId)
+        && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostUid == request.auth.uid;
+    }
+
+    function isRoomMember(roomId, uid) {
+      return uid is string && exists(memberPath(roomId, uid));
+    }
+
+    function isReady(roomId, uid) {
+      let path = /databases/$(database)/documents/rooms/$(roomId)/game/players/items/$(uid);
+      return exists(path) && get(path).data.ready == true;
+    }
+
+    function validCardDefinition(card) {
+      return card is map
+        && card.keys().hasOnly(['name', 'type', 'effet', 'played'])
+        && card.keys().hasAll(['name', 'type', 'effet', 'played'])
+        && card.name is string
+        && card.type is string
+        && card.effet is string
+        && card.played is bool;
+    }
+
+    function validPrivateHand(hand) {
+      return hand is map
+        && hand.keys().hasOnly(['cdm', 'mat'])
+        && hand.keys().hasAll(['cdm', 'mat'])
+        && hand.cdm is list
+        && hand.mat is list
+        && hand.cdm.size() <= 12
+        && hand.mat.size() <= 12;
+    }
+
+    function validDrawn(cards) {
+      return cards is list
+        && cards.size() <= 3
+        && (cards.size() < 1 || validTurnCard(cards[0]))
+        && (cards.size() < 2 || validTurnCard(cards[1]))
+        && (cards.size() < 3 || validTurnCard(cards[2]));
+    }
+
+    function validTurnCard(card) {
+      return card is map
+        && card.keys().hasOnly(['name', 'bonus', 'malus', 'assoc'])
+        && card.keys().hasAll(['name', 'bonus', 'malus', 'assoc'])
+        && card.name is string
+        && card.bonus is string
+        && card.malus is string
+        && card.assoc is string;
+    }
+
+    function validPrivateData(data, uid) {
+      return data is map
+        && data.keys().hasOnly(['uid', 'hand', 'drawn', 'drawnRevision', 'updatedAt'])
+        && data.keys().hasAll(['uid', 'hand', 'drawn', 'drawnRevision', 'updatedAt'])
+        && data.uid == uid
+        && validPrivateHand(data.hand)
+        && validDrawn(data.drawn)
+        && data.drawnRevision is int
+        && data.drawnRevision >= -1
+        && data.updatedAt is timestamp;
+    }
+
+    function validTrait(trait) {
+      return trait is map
+        && trait.keys().hasOnly(['name', 'desc', 'bonus', 'malus', 'assoc'])
+        && trait.keys().hasAll(['name', 'desc', 'bonus', 'malus', 'assoc'])
+        && trait.name is string
+        && trait.desc is string
+        && trait.bonus is string
+        && trait.malus is string
+        && trait.assoc is string;
+    }
+
+    function validMode(mode) {
+      return mode is map
+        && mode.keys().hasOnly(['name', 'bonus', 'malus', 'assoc'])
+        && mode.keys().hasAll(['name', 'bonus', 'malus', 'assoc'])
+        && mode.name is string
+        && mode.bonus is string
+        && mode.malus is string
+        && mode.assoc is string;
+    }
+
+    function validPublicPlayer(player) {
+      return player is map
+        && player.keys().hasOnly(['uid', 'name', 'cepage', 'terroir', 'mode', 'q', 'a', 'r'])
+        && player.keys().hasAll(['uid', 'name', 'cepage', 'terroir', 'mode', 'q', 'a', 'r'])
+        && player.uid is string
+        && player.name is string
+        && validTrait(player.cepage)
+        && validTrait(player.terroir)
+        && validMode(player.mode)
+        && player.q is number && player.q >= 0
+        && player.a is number && player.a >= 0
+        && player.r is number && player.r >= 0;
+    }
+
+    function validPlayers(players) {
+      return players is list
+        && players.size() >= 2
+        && players.size() <= 4
+        && validPublicPlayer(players[0])
+        && validPublicPlayer(players[1])
+        && players[0].uid != players[1].uid
+        && (players.size() < 3 || (validPublicPlayer(players[2])
+          && players[2].uid != players[0].uid && players[2].uid != players[1].uid))
+        && (players.size() < 4 || (validPublicPlayer(players[3])
+          && players[3].uid != players[0].uid && players[3].uid != players[1].uid
+          && players[3].uid != players[2].uid));
+    }
+
+    function hasPlayer(players, uid) {
+      return (players.size() > 0 && players[0].uid == uid)
+        || (players.size() > 1 && players[1].uid == uid)
+        || (players.size() > 2 && players[2].uid == uid)
+        || (players.size() > 3 && players[3].uid == uid);
+    }
+
+    function allPlayersReady(roomId, players) {
+      return isReady(roomId, players[0].uid)
+        && isReady(roomId, players[1].uid)
+        && (players.size() < 3 || isReady(roomId, players[2].uid))
+        && (players.size() < 4 || isReady(roomId, players[3].uid));
+    }
+
+    function allPlayersMembers(roomId, players) {
+      return isRoomMember(roomId, players[0].uid)
+        && isRoomMember(roomId, players[1].uid)
+        && (players.size() < 3 || isRoomMember(roomId, players[2].uid))
+        && (players.size() < 4 || isRoomMember(roomId, players[3].uid));
+    }
+
+    function validMeteo(meteo) {
+      return meteo is map
+        && meteo.keys().hasOnly(['name', 'bonus', 'malus'])
+        && meteo.keys().hasAll(['name', 'bonus', 'malus'])
+        && meteo.name is string && meteo.bonus is string && meteo.malus is string;
+    }
+
+    function validEvent(event) {
+      return event is map
+        && event.keys().hasOnly(['name', 'desc', 'effet', 'delta'])
+        && event.keys().hasAll(['name', 'desc', 'effet', 'delta'])
+        && event.name is string && event.desc is string && event.effet is string
+        && event.delta is map
+        && event.delta.keys().hasOnly(['q', 'a', 'r'])
+        && event.delta.keys().hasAll(['q', 'a', 'r'])
+        && event.delta.q is number && event.delta.a is number && event.delta.r is number;
+    }
+
+    function validChosen(chosen, players) {
+      return chosen is list
+        && chosen.size() <= players.size()
+        && (chosen.size() < 1 || validChosenItem(chosen[0], players))
+        && (chosen.size() < 2 || validChosenItem(chosen[1], players))
+        && (chosen.size() < 3 || validChosenItem(chosen[2], players))
+        && (chosen.size() < 4 || validChosenItem(chosen[3], players));
+    }
+
+    function validChosenItem(item, players) {
+      return item is map
+        && item.keys().hasOnly(['playerUid', 'card'])
+        && item.keys().hasAll(['playerUid', 'card'])
+        && hasPlayer(players, item.playerUid)
+        && validTurnCard(item.card);
+    }
+
+    function validGameState(data) {
+      return data is map
+        && data.keys().hasOnly([
+          'schemaVersion', 'status', 'revision', 'currentPlayerUid',
+          'players', 'saisonIdx', 'tourInSaison', 'meteo',
+          'evenement', 'allChosen', 'turnStatus', 'updatedAt'
+        ])
+        && data.keys().hasAll([
+          'schemaVersion', 'status', 'revision', 'currentPlayerUid',
+          'players', 'saisonIdx', 'tourInSaison', 'meteo',
+          'evenement', 'allChosen', 'turnStatus', 'updatedAt'
+        ])
+        && data.schemaVersion == 9
+        && data.status in ['playing', 'finished']
+        && data.revision is int && data.revision >= 1
+        && validPlayers(data.players)
+        && data.currentPlayerUid is string
+        && hasPlayer(data.players, data.currentPlayerUid)
+        && data.saisonIdx is int && data.saisonIdx >= 0 && data.saisonIdx <= 3
+        && data.tourInSaison is int && data.tourInSaison >= 0 && data.tourInSaison <= 1
+        && (data.meteo == null || validMeteo(data.meteo))
+        && (data.evenement == null || validEvent(data.evenement))
+        && validChosen(data.allChosen, data.players)
+        && data.turnStatus == 'choosing'
+        && data.updatedAt is timestamp;
+    }
+
+    function validSetupProfile(data, uid) {
+      return data is map
+        && data.keys().hasOnly([
+          'uid', 'name', 'cepage', 'terroir', 'mode',
+          'q', 'a', 'r', 'ready', 'updatedAt'
+        ])
+        && data.keys().hasAll([
+          'uid', 'name', 'cepage', 'terroir', 'mode',
+          'q', 'a', 'r', 'ready', 'updatedAt'
+        ])
+        && data.uid == uid
+        && data.name is string
+        && validTrait(data.cepage)
+        && validTrait(data.terroir)
+        && validMode(data.mode)
+        && data.q is number && data.q >= 0
+        && data.a is number && data.a >= 0
+        && data.r is number && data.r >= 0
+        && data.ready == true
+        && data.updatedAt is timestamp;
+    }
+
+    match /rooms/{roomId}/game/state {
+      allow read: if isMember(roomId);
+      allow create: if isHost(roomId)
+        && validGameState(request.resource.data)
+        && request.resource.data.status == 'playing'
+        && request.resource.data.revision == 1
+        && allPlayersMembers(roomId, request.resource.data.players)
+        && allPlayersReady(roomId, request.resource.data.players);
+      allow update: if isMember(roomId)
+        && resource.data.status == 'playing'
+        && resource.data.currentPlayerUid == request.auth.uid
+        && validGameState(request.resource.data)
+        && request.resource.data.revision == resource.data.revision + 1
+        && request.resource.data.players.size() == resource.data.players.size()
+        && request.resource.data.players[0].uid == resource.data.players[0].uid
+        && request.resource.data.players[1].uid == resource.data.players[1].uid
+        && (resource.data.players.size() < 3 || request.resource.data.players[2].uid == resource.data.players[2].uid)
+        && (resource.data.players.size() < 4 || request.resource.data.players[3].uid == resource.data.players[3].uid);
+      allow delete: if false;
+    }
+
+    match /rooms/{roomId}/game/players/items/{playerUid} {
+      allow read: if isMember(roomId);
+      allow create, update: if isMember(roomId)
+        && request.auth.uid == playerUid
+        && validSetupProfile(request.resource.data, playerUid)
+        && !exists(/databases/$(database)/documents/rooms/$(roomId)/game/state);
+      allow delete: if false;
+    }
+
+    match /rooms/{roomId}/private/{playerUid} {
+      allow read: if isMember(roomId) && request.auth.uid == playerUid;
+      allow create, update: if isMember(roomId)
+        && request.auth.uid == playerUid
+        && validPrivateData(request.resource.data, playerUid);
+      allow delete: if false;
+    }
+
+    match /rooms/{roomId}/actions/{actionId} {
+      allow read: if isMember(roomId);
+      allow create: if isMember(roomId)
+        && request.resource.data.keys().hasOnly(['by', 'type', 'summary', 'createdAt'])
+        && request.resource.data.keys().hasAll(['by', 'type', 'summary', 'createdAt'])
+        && request.resource.data.by == request.auth.uid
+        && request.resource.data.type is string
+        && request.resource.data.type.size() <= 40
+        && request.resource.data.summary is string
+        && request.resource.data.summary.size() <= 160
+        && request.resource.data.createdAt is timestamp;
+      allow update, delete: if false;
+    }
+  }
+}
