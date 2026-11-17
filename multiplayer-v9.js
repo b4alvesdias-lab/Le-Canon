@@ -42,6 +42,50 @@
       return room.data();
     },
 
+    // Les cartes V8 contiennent une fonction appliquer(), non sérialisable
+    // par Firestore. On ne stocke que les champs descriptifs et l'état joué.
+    serializeCard(card) {
+      if (!card || typeof card !== 'object' || typeof card.name !== 'string' ||
+          typeof card.type !== 'string') {
+        throw new Error('Carte invalide : nom ou type manquant.');
+      }
+      return {
+        name: card.name,
+        type: card.type,
+        effet: typeof card.effet === 'string' ? card.effet : '',
+        played: card.played === true
+      };
+    },
+
+    serializeHand(player) {
+      if (!player || !Array.isArray(player.cdm) || !Array.isArray(player.mat)) {
+        throw new Error('Main invalide : les cartes Coup de Main et Matériel sont requises.');
+      }
+      return {
+        cdm: player.cdm.map(card => this.serializeCard(card)),
+        mat: player.mat.map(card => this.serializeCard(card))
+      };
+    },
+
+    hydrateHand(savedHand, cardCatalog) {
+      if (!savedHand || !cardCatalog ||
+          !Array.isArray(savedHand.cdm) || !Array.isArray(savedHand.mat) ||
+          !Array.isArray(cardCatalog.cdm) || !Array.isArray(cardCatalog.mat)) {
+        throw new Error('Impossible de reconstituer cette main.');
+      }
+      const hydrateGroup = (savedCards, definitions) => savedCards.map(saved => {
+        const definition = definitions.find(card =>
+          card.name === saved.name && card.type === saved.type
+        );
+        if (!definition) throw new Error('Carte inconnue dans la main : ' + saved.name);
+        return { ...definition, played: saved.played === true };
+      });
+      return {
+        cdm: hydrateGroup(savedHand.cdm, cardCatalog.cdm),
+        mat: hydrateGroup(savedHand.mat, cardCatalog.mat)
+      };
+    },
+
     assertPublicData(value, path) {
       if (!value || typeof value !== 'object') return;
       for (const [key, child] of Object.entries(value)) {
