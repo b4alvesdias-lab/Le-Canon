@@ -194,7 +194,7 @@
         aiIdx: 1
       };
       const initial = adapter.buildInitialState(G, uids);
-      await mp.createGame(initial, localSetupPlayer);
+      await mp.createGame(initial);
       toast('La partie est lancée !');
     } catch (err) {
       toast(firebaseFriendlyError(err), 'warn');
