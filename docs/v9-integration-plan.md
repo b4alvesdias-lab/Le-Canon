@@ -53,18 +53,16 @@ Les fichiers `multiplayer-v9.js` et `multiplayer-v9-adapter.js` contiennent dés
 - génération persistante des cartes proposées pour une révision (`prepareOwnTurn`) ;
 - conversion explicite des profils, cartes, états publics et paquets privés du moteur V8.
 
-Ces fonctions sont testées au niveau du contrat et de la conversion. Elles ne sont pas encore appelées par `index.html`.
+Le contrôleur `multiplayer-v9-controller.js` et la page isolée `v9.html` ont maintenant été ajoutés pour raccorder le salon, les préparations, les tours, les cartes spéciales et les scores. La page `index.html` n’a pas été modifiée. Le parcours complet reste à vérifier en navigateur avec deux comptes et les règles Firebase adaptées.
 
 ## Ordre d’intégration restant
 
-1. Créer une copie de travail V9 du moteur et charger les deux modules sans toucher à `main`.
-2. Ajouter la préparation individuelle dans le salon : chaque téléphone configure uniquement son propre vigneron et ses cartes.
-3. Ajouter le bouton de lancement réservé à l’hôte et initialiser l’état partagé depuis les profils prêts.
-4. Raccorder l’affichage du joueur actif, ses trois propositions privées et la validation de son choix.
-5. Porter les cartes spéciales : ciblage public, effet calculé et mise à jour de la main privée.
-6. Synchroniser les scores, corrections éventuelles, progression des huit tours et écran final.
-7. Fusionner soigneusement les règles Firestore V9 avec les règles V8, puis tester les droits et les parcours complets sur deux téléphones.
-8. Tester déconnexions, retours arrière, doubles clics et conflits avant publication.
+1. Vérifier la syntaxe et le comportement de `v9.html` dans un navigateur ; corriger les erreurs d’intégration.
+2. Publier un jeu de règles V9 validé qui conserve les autorisations V8 et ajoute les nouveaux sous-chemins.
+3. Tester sur deux téléphones la préparation individuelle, le lancement hôte et la confidentialité des mains.
+4. Tester les huit tours, les cartes spéciales, le calcul des scores et la fin de partie.
+5. Tester les retours arrière, doubles clics, rafraîchissements et déconnexions/reconnexions.
+6. Fusionner vers `main` et publier seulement après validation réelle.
 
 ## Limites de sécurité
 
