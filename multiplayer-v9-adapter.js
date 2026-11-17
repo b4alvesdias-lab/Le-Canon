@@ -23,9 +23,10 @@
       if (!player || !uid || !player.name || !player.cepage || !player.terroir || !player.mode) {
         throw new Error('Profil joueur incomplet.');
       }
+      const safeName = String(player.name).replace(/[<>]/g, '').replace(/[\\u0000-\\u001F]/g, '').trim().slice(0, 24) || 'Vigneron';
       return {
         uid: String(uid),
-        name: String(player.name).slice(0, 24),
+        name: safeName,
         cepage: pick(player.cepage, ['name', 'desc', 'bonus', 'malus', 'assoc']),
         terroir: pick(player.terroir, ['name', 'desc', 'bonus', 'malus', 'assoc']),
         mode: pick(player.mode, ['name', 'bonus', 'malus', 'assoc']),
