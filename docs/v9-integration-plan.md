@@ -26,12 +26,16 @@ Contient uniquement ce que tous les joueurs peuvent voir :
 
 Ne jamais y enregistrer les mains, les cartes spéciales non jouées, ni les trois cartes de tour proposées au joueur actif.
 
+### Profils de préparation : `rooms/{code}/game/players/items/{uid}`
+
+Chaque joueur écrit depuis son propre téléphone son profil public (`uid`, nom, cépage, terroir, mode, scores initiaux et `ready`). L’hôte ne peut initialiser la partie que si chaque joueur présent dans la partie a publié son profil prêt.
+
 ### Données privées : `rooms/{code}/private/{uid}`
 
 Chaque joueur lit uniquement son propre document :
 - ses cartes Coup de Main ;
 - ses cartes Matériel ;
-- ses trois cartes de tour proposées ;
+- ses trois cartes de tour proposées, avec `drawnRevision` pour éviter de retirer de nouvelles cartes après un rafraîchissement ;
 - l’état de sélection local nécessaire à son tour.
 
 Un joueur ne doit jamais lire la collection privée entière ni les documents privés des autres UID.
@@ -40,16 +44,27 @@ Un joueur ne doit jamais lire la collection privée entière ni les documents pr
 
 Conserve un résumé public et non sensible de chaque action validée. Aucun contenu de main ou carte secrète.
 
-## Ordre d’intégration
+## Avancement technique
 
-1. Terminer le contrat Firestore et tester les droits de lecture/écriture avec deux comptes anonymes.
-2. Ajouter au salon un bouton de lancement réservé à l’hôte ; attendre que les joueurs soient présents.
-3. Faire choisir à chaque joueur son mode et ses cartes de départ sur son propre téléphone.
-4. Faire initialiser l’état public par l’hôte et écrire chaque main par son propriétaire.
-5. Adapter la distribution des trois cartes de tour pour qu’elles restent dans le document privé du joueur actif.
-6. Remplacer le passage local de joueur par une validation Firestore avec révision, puis afficher l’écran du joueur suivant sur son téléphone.
-7. Synchroniser les scores et la fin de partie.
-8. Tester les déconnexions, retours en arrière, doubles clics et conflits de tour sur deux téléphones avant de publier.
+Les fichiers `multiplayer-v9.js` et `multiplayer-v9-adapter.js` contiennent désormais les fonctions de base suivantes :
+- enregistrement du profil public et de la main privée par le joueur connecté (`saveOwnSetup`) ;
+- écoute des profils de préparation (`listenSetupPlayers`) ;
+- refus du lancement si un joueur n’a pas publié son profil prêt ;
+- génération persistante des cartes proposées pour une révision (`prepareOwnTurn`) ;
+- conversion explicite des profils, cartes, états publics et paquets privés du moteur V8.
+
+Ces fonctions sont testées au niveau du contrat et de la conversion. Elles ne sont pas encore appelées par `index.html`.
+
+## Ordre d’intégration restant
+
+1. Créer une copie de travail V9 du moteur et charger les deux modules sans toucher à `main`.
+2. Ajouter la préparation individuelle dans le salon : chaque téléphone configure uniquement son propre vigneron et ses cartes.
+3. Ajouter le bouton de lancement réservé à l’hôte et initialiser l’état partagé depuis les profils prêts.
+4. Raccorder l’affichage du joueur actif, ses trois propositions privées et la validation de son choix.
+5. Porter les cartes spéciales : ciblage public, effet calculé et mise à jour de la main privée.
+6. Synchroniser les scores, corrections éventuelles, progression des huit tours et écran final.
+7. Fusionner soigneusement les règles Firestore V9 avec les règles V8, puis tester les droits et les parcours complets sur deux téléphones.
+8. Tester déconnexions, retours arrière, doubles clics et conflits avant publication.
 
 ## Limites de sécurité
 
