@@ -46,7 +46,7 @@
       if (!value || typeof value !== 'object') return;
       for (const [key, child] of Object.entries(value)) {
         const normalized = key.toLowerCase().replace(/[_-]/g, '');
-        if (['hand', 'privatehand', 'privatecards', 'cdm', 'mat'].includes(normalized)) {
+        if (['hand', 'privatehand', 'privatecards', 'cdm', 'mat', 'drawn', 'drawncards', 'options', 'selectedhandcard'].includes(normalized)) {
           throw new Error('Une donnée privée ne peut pas être enregistrée dans l’état public.');
         }
         if (child && typeof child === 'object') {
