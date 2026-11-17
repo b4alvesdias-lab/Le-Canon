@@ -102,6 +102,9 @@
       const member = members.find(m => m.uid === v8User.uid);
       const savedProfile = setupProfiles.find(profile => profile.uid === v8User.uid);
       let p;
+      if (savedProfile && (!ownPrivate || !ownPrivate.hand)) {
+        throw new Error('Chargement de ta main en cours. Attends quelques secondes puis réessaie.');
+      }
       if (savedProfile && ownPrivate && ownPrivate.hand) {
         p = adapter.hydratePlayer(savedProfile, ownPrivate, { cdm: ALL_CDM, mat: ALL_MAT });
       } else {
