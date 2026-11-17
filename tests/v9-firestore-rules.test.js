@@ -140,11 +140,6 @@ test('seul le joueur actif fait avancer la révision et écrit une action', asyn
     currentPlayerUid: 'uid-host',
     updatedAt: Timestamp.now()
   }));
-  await assertSucceeds(updateDoc(doc(guestDb, path('game/state')), {
-    revision: 3,
-    currentPlayerUid: 'uid-host',
-    updatedAt: Timestamp.now()
-  }));
   await assertFails(setDoc(doc(hostDb, path('actions/action-host')), {
     by: 'uid-host',
     type: 'turn',
@@ -156,6 +151,11 @@ test('seul le joueur actif fait avancer la révision et écrit une action', asyn
     type: 'turn',
     summary: 'Action du joueur actif',
     createdAt: Timestamp.now()
+  }));
+  await assertSucceeds(updateDoc(doc(guestDb, path('game/state')), {
+    revision: 3,
+    currentPlayerUid: 'uid-host',
+    updatedAt: Timestamp.now()
   }));
 });
 
