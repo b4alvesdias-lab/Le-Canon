@@ -271,9 +271,9 @@ service cloud.firestore {
       allow update: if isMember(roomId)
         && request.auth.uid == playerUid
         && validPrivateData(request.resource.data, playerUid)
-        && exists(/databases/$(database)/documents/rooms/$(roomId)/game/state)
-        && get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.status == 'playing'
-        && get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.currentPlayerUid == request.auth.uid;
+        && (!exists(/databases/$(database)/documents/rooms/$(roomId)/game/state)
+          || (get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.status == 'playing'
+            && get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.currentPlayerUid == request.auth.uid));
       allow delete: if false;
     }
 
