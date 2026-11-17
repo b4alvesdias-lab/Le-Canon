@@ -162,6 +162,59 @@ service cloud.firestore {
         && v9ValidTurnCard(item.card);
     }
 
+    function v9ValidPublicPlayerShape(player) {
+      return player is map
+        && player.keys().hasOnly(['uid', 'name', 'cepage', 'terroir', 'mode', 'q', 'a', 'r'])
+        && player.uid is string
+        && player.name is string
+        && player.cepage is map
+        && player.cepage.keys().hasOnly(['name', 'desc', 'bonus', 'malus', 'assoc'])
+        && player.terroir is map
+        && player.terroir.keys().hasOnly(['name', 'desc', 'bonus', 'malus', 'assoc'])
+        && player.mode is map
+        && player.mode.keys().hasOnly(['name', 'bonus', 'malus', 'assoc'])
+        && player.q is number && player.a is number && player.r is number;
+    }
+
+    function v9ValidChosenShape(item) {
+      return item is map
+        && item.keys().hasOnly(['playerUid', 'card'])
+        && item.playerUid is string
+        && item.card is map
+        && item.card.keys().hasOnly(['name', 'bonus', 'malus', 'assoc']);
+    }
+
+    function v9ValidGameStateUpdate(data) {
+      return data is map
+        && data.keys().hasOnly([
+          'schemaVersion', 'status', 'revision', 'currentPlayerUid',
+          'players', 'saisonIdx', 'tourInSaison', 'meteo',
+          'evenement', 'allChosen', 'turnStatus', 'updatedAt'
+        ])
+        && data.schemaVersion == 9
+        && data.status in ['playing', 'finished']
+        && data.revision is int
+        && data.players is list
+        && data.players.size() >= 2 && data.players.size() <= 4
+        && v9ValidPublicPlayerShape(data.players[0])
+        && v9ValidPublicPlayerShape(data.players[1])
+        && (data.players.size() < 3 || v9ValidPublicPlayerShape(data.players[2]))
+        && (data.players.size() < 4 || v9ValidPublicPlayerShape(data.players[3]))
+        && data.currentPlayerUid is string
+        && v9HasPlayer(data.players, data.currentPlayerUid)
+        && data.saisonIdx is int && data.saisonIdx >= 0 && data.saisonIdx <= 3
+        && data.tourInSaison is int && data.tourInSaison >= 0 && data.tourInSaison <= 1
+        && (data.meteo == null || v9ValidMeteo(data.meteo))
+        && (data.evenement == null || v9ValidEvent(data.evenement))
+        && data.allChosen is list && data.allChosen.size() <= data.players.size()
+        && (data.allChosen.size() < 1 || v9ValidChosenShape(data.allChosen[0]))
+        && (data.allChosen.size() < 2 || v9ValidChosenShape(data.allChosen[1]))
+        && (data.allChosen.size() < 3 || v9ValidChosenShape(data.allChosen[2]))
+        && (data.allChosen.size() < 4 || v9ValidChosenShape(data.allChosen[3]))
+        && data.turnStatus == 'choosing'
+        && data.updatedAt is timestamp;
+    }
+
     function v9ValidGameState(data) {
       return data is map
         && data.keys().hasOnly([
@@ -217,7 +270,7 @@ service cloud.firestore {
       allow update: if v9IsMember(roomId)
         && resource.data.status == 'playing'
         && resource.data.currentPlayerUid == request.auth.uid
-        && v9ValidGameState(request.resource.data)
+        && v9ValidGameStateUpdate(request.resource.data)
         && request.resource.data.revision == resource.data.revision + 1
         && request.resource.data.players.size() == resource.data.players.size()
         && request.resource.data.players[0].uid == resource.data.players[0].uid
