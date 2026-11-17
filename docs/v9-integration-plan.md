@@ -11,7 +11,7 @@ Le moteur V8 est encore un moteur local :
 - `goScores()` calcule les points de tous les joueurs localement ;
 - `nextTour()` fait avancer la saison et les huit tours.
 
-Le salon V8 ne synchronise actuellement que la salle et la liste des membres. Le module V9 ne doit donc pas être considéré comme une partie jouable.
+Le salon V8 ne synchronise que la salle et la liste des membres. Le contrôleur V9 raccorde maintenant le moteur et une partie complète à deux navigateurs a été jouée automatiquement avec les émulateurs Firebase.
 
 ## Contrat de données proposé
 
@@ -53,16 +53,14 @@ Les fichiers `multiplayer-v9.js` et `multiplayer-v9-adapter.js` contiennent dés
 - génération persistante des cartes proposées pour une révision (`prepareOwnTurn`) ;
 - conversion explicite des profils, cartes, états publics et paquets privés du moteur V8.
 
-Le contrôleur `multiplayer-v9-controller.js` et la page isolée `v9.html` ont maintenant été ajoutés pour raccorder le salon, les préparations, les tours, les cartes spéciales et les scores. La page `index.html` n’a pas été modifiée. Le parcours complet reste à vérifier en navigateur avec deux comptes et les règles Firebase adaptées.
+Le contrôleur `multiplayer-v9-controller.js` et la page isolée `v9.html` raccordent le salon, les préparations, les tours, les cartes spéciales et les scores. Le test Playwright a validé deux sessions distinctes, les huit tours et l’écran final. `index.html` n’a pas été modifié. Il reste à fusionner les règles dans le vrai projet Firebase et à tester sur deux téléphones.
 
 ## Ordre d’intégration restant
 
-1. Vérifier la syntaxe et le comportement de `v9.html` dans un navigateur ; corriger les erreurs d’intégration.
-2. Publier un jeu de règles V9 validé qui conserve les autorisations V8 et ajoute les nouveaux sous-chemins.
-3. Tester sur deux téléphones la préparation individuelle, le lancement hôte et la confidentialité des mains.
-4. Tester les huit tours, les cartes spéciales, le calcul des scores et la fin de partie.
-5. Tester les retours arrière, doubles clics, rafraîchissements et déconnexions/reconnexions.
-6. Fusionner vers `main` et publier seulement après validation réelle.
+1. Fusionner `FIRESTORE_V9_MERGE_FRAGMENT.txt` dans les règles V8 actives, sans copier les règles racine simplifiées du fichier d’émulateur.
+2. Tester la création/rejoint de salon sur le vrai projet Firebase `le-canon` avec deux téléphones.
+3. Tester les rafraîchissements, retours arrière, doubles clics, déconnexions et reconnexions.
+4. Après validation, fusionner la branche V9 vers `main` et publier `v9.html` sans perdre l’accès à la V8.
 
 ## Limites de sécurité
 
