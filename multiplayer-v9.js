@@ -300,7 +300,7 @@
           tx.set(privateRef, {
             hand: privateData.hand,
             drawn: privateData.drawn || [],
-            drawnRevision: Number(privateData.drawnRevision),
+            drawnRevision: Number(current.revision) + 1,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
         }
