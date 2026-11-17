@@ -48,7 +48,7 @@ service cloud.firestore {
           && request.resource.data.keys().hasOnly([
             'schemaVersion', 'status', 'revision', 'currentPlayerUid',
             'players', 'saisonIdx', 'tourInSaison', 'meteo',
-            'evenement', 'allChosen', 'updatedAt'
+            'evenement', 'allChosen', 'turnStatus', 'updatedAt'
           ]);
 
         allow update: if docId == 'state'
@@ -61,9 +61,24 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             'status', 'revision', 'currentPlayerUid', 'players',
             'saisonIdx', 'tourInSaison', 'meteo', 'evenement',
-            'allChosen', 'updatedAt'
+            'allChosen', 'turnStatus', 'updatedAt'
           ]);
 
+        allow delete: if false;
+      }
+
+      // Profils de préparation : visibles par les membres, modifiables par leur propriétaire.
+      match /game/players/items/{playerUid} {
+        allow read: if isMember(roomId);
+        allow create, update: if signedIn()
+          && request.auth.uid == playerUid
+          && isMember(roomId)
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.ready == true
+          && request.resource.data.keys().hasOnly([
+            'uid', 'name', 'cepage', 'terroir', 'mode',
+            'q', 'a', 'r', 'ready', 'updatedAt'
+          ]);
         allow delete: if false;
       }
 
@@ -76,7 +91,7 @@ service cloud.firestore {
           && request.auth.uid == playerUid
           && isMember(roomId)
           && request.resource.data.uid == request.auth.uid
-          && request.resource.data.keys().hasOnly(['uid', 'hand', 'updatedAt']);
+          && request.resource.data.keys().hasOnly(['uid', 'hand', 'drawn', 'drawnRevision', 'updatedAt']);
 
         allow delete: if false;
       }
@@ -103,8 +118,8 @@ service cloud.firestore {
 
 1. Le schéma public final doit correspondre exactement à la liste des champs autorisés ci-dessus. Si d’autres champs sont nécessaires, les ajouter après vérification.
 2. Les règles ne valident pas à elles seules la justesse des calculs de score ni la légitimité de chaque carte jouée.
-3. Le code client ne doit jamais envoyer les cartes proposées ou les mains dans `players`, `allChosen` ou une autre donnée publique.
-4. Les règles V8 de la racine `rooms/{roomId}` et `members/{memberUid}` doivent être conservées et fusionnées soigneusement.
+3. Les profils de préparation sont publiés dans `game/players/items/{uid}` ; les mains et les cartes proposées restent dans `private/{uid}`. Le champ `drawnRevision` lie les propositions à une révision précise.
+4. Les règles doivent aussi autoriser le champ privé `drawn` et `drawnRevision`, ainsi que le sous-chemin de préparation `game/players/items/{uid}`. Les règles V8 de la racine `rooms/{roomId}` et `members/{memberUid}` doivent être conservées et fusionnées soigneusement.
 5. Pour une vraie protection anti-triche, déplacer la validation des actions et des scores dans un backend de confiance (Cloud Functions).
 
 **Ne pas remplacer les règles Firestore actuellement publiées par ce brouillon.**
