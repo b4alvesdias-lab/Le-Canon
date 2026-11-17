@@ -27,8 +27,10 @@ jobs:
           java-version: 21
       - name: Installer les dépendances des tests Firestore
         run: npm install --no-audit --no-fund
-      - name: Tester les règles Firestore dans l’émulateur
-        run: npx firebase emulators:exec --only firestore --project demo-le-canon-v9 "npm run test:rules"
+      - name: Installer Chromium pour les tests navigateur
+        run: npx playwright install --with-deps chromium
+      - name: Tester Firestore et une partie réelle à deux joueurs
+        run: npx firebase emulators:exec --only auth,firestore --project demo-le-canon-v9 "npm run test:rules && npm run test:e2e"
       - name: Vérifier la syntaxe du module V9
         run: node --check multiplayer-v9.js && node --check multiplayer-v9-adapter.js && node --check multiplayer-v9-controller.js
       - name: Vérifier les tests du contrat privé/public
