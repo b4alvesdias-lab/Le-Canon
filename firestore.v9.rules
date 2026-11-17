@@ -38,14 +38,29 @@ service cloud.firestore {
         && card.played is bool;
     }
 
+    function validCardList(cards) {
+      return cards is list
+        && cards.size() <= 12
+        && (cards.size() < 1 || validCardDefinition(cards[0]))
+        && (cards.size() < 2 || validCardDefinition(cards[1]))
+        && (cards.size() < 3 || validCardDefinition(cards[2]))
+        && (cards.size() < 4 || validCardDefinition(cards[3]))
+        && (cards.size() < 5 || validCardDefinition(cards[4]))
+        && (cards.size() < 6 || validCardDefinition(cards[5]))
+        && (cards.size() < 7 || validCardDefinition(cards[6]))
+        && (cards.size() < 8 || validCardDefinition(cards[7]))
+        && (cards.size() < 9 || validCardDefinition(cards[8]))
+        && (cards.size() < 10 || validCardDefinition(cards[9]))
+        && (cards.size() < 11 || validCardDefinition(cards[10]))
+        && (cards.size() < 12 || validCardDefinition(cards[11]));
+    }
+
     function validPrivateHand(hand) {
       return hand is map
         && hand.keys().hasOnly(['cdm', 'mat'])
         && hand.keys().hasAll(['cdm', 'mat'])
-        && hand.cdm is list
-        && hand.mat is list
-        && hand.cdm.size() <= 12
-        && hand.mat.size() <= 12;
+        && validCardList(hand.cdm)
+        && validCardList(hand.mat);
     }
 
     function validDrawn(cards) {
