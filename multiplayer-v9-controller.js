@@ -79,7 +79,9 @@
     const ownReady = !!(v8User && setupProfiles.some(p => p.uid === v8User.uid && p.ready));
     prepare.textContent = ownReady ? 'Modifier ma préparation' : 'Préparer mon vigneron';
     prepare.style.display = state ? 'none' : 'block';
-    const readyCount = setupProfiles.filter(p => p.ready).length;
+    const readyCount = members.filter(member =>
+      setupProfiles.some(profile => profile.uid === member.uid && profile.ready === true)
+    ).length;
     const allReady = members.length >= 2 && readyCount === members.length;
     start.style.display = v8IsHost && !state ? 'block' : 'none';
     start.disabled = !allReady;
@@ -511,7 +513,7 @@
   };
 
   leaveOnlineRoom = async function () {
-    if (state && state.status === 'playing') {
+    if (state && state.status === 'playing' && state.players.some(player => player.uid === v8User.uid)) {
       toast('La partie est en cours. Pour ne pas bloquer les autres joueurs, ferme simplement cette page et reviens avec le même code.');
       return;
     }
