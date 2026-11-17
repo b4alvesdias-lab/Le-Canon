@@ -1,6 +1,6 @@
 # Le Canon — règles Firestore V9 (brouillon à tester)
 
-Ces règles ne sont pas prêtes pour la production. Elles conservent le principe des salons V8 et ajoutent des chemins séparés pour l’état public et les mains privées. Ne pas les publier avant d’avoir validé le schéma exact des documents et les tests avec deux comptes.
+Ce document est un ancien brouillon explicatif. Le fragment de règles actuellement testé est `firestore.v9.rules`, exécuté dans l’émulateur avec deux identifiants. Ce fragment ne contient PAS les autorisations V8 de création/rejoindre des salons : il doit être fusionné aux règles actives, jamais publié seul.
 
 Principes :
 - un membre peut lire l’état public ;
@@ -122,4 +122,4 @@ service cloud.firestore {
 4. Les règles doivent aussi autoriser le champ privé `drawn` et `drawnRevision`, ainsi que le sous-chemin de préparation `game/players/items/{uid}`. Les règles V8 de la racine `rooms/{roomId}` et `members/{memberUid}` doivent être conservées et fusionnées soigneusement.
 5. Pour une vraie protection anti-triche, déplacer la validation des actions et des scores dans un backend de confiance (Cloud Functions).
 
-**Ne pas remplacer les règles Firestore actuellement publiées par ce brouillon.**
+**Ne publie ni ce brouillon ni `firestore.v9.rules` seuls dans Firebase.** `firestore.v9.rules` sert uniquement aux tests d’émulateur et doit être fusionné aux règles V8 existantes après validation.
