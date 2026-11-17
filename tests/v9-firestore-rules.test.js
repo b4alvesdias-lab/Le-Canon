@@ -11,6 +11,7 @@ const {
   setDoc,
   getDoc,
   updateDoc,
+  runTransaction,
   Timestamp
 } = require('firebase/firestore');
 
@@ -181,5 +182,48 @@ test('les profils de préparation sont verrouillés après le lancement', async 
   await assertSucceeds(setDoc(doc(dbFor('uid-host'), path('game/state')), initialState()));
   await assertFails(updateDoc(doc(dbFor('uid-guest'), path('game/players/items/uid-guest')), {
     name: 'Bob modifié'
+  }));
+});
+
+test('la transaction réelle d’un tour met à jour état, main et journal ensemble', async () => {
+  await prepareBoth();
+  const hostDb = dbFor('uid-host');
+  const stateRef = doc(hostDb, path('game/state'));
+  const privateRef = doc(hostDb, path('private/uid-host'));
+  const actionRef = doc(hostDb, path('actions/atomic-turn'));
+  await assertSucceeds(setDoc(stateRef, initialState()));
+  await assertSucceeds(updateDoc(privateRef, {
+    drawn: [{ name: 'Taille équilibrée', bonus: '+1 qualité', malus: 'Aucun', assoc: '—' }],
+    drawnRevision: 1,
+    updatedAt: Timestamp.now()
+  }));
+
+  await assertSucceeds(runTransaction(hostDb, async tx => {
+    const stateSnap = await tx.get(stateRef);
+    const privateSnap = await tx.get(privateRef);
+    const current = stateSnap.data();
+    const own = privateSnap.data();
+    tx.update(stateRef, {
+      revision: 2,
+      currentPlayerUid: 'uid-guest',
+      allChosen: [{
+        playerUid: 'uid-host',
+        card: { name: 'Taille équilibrée', bonus: '+1 qualité', malus: 'Aucun', assoc: '—' }
+      }],
+      updatedAt: Timestamp.now()
+    });
+    tx.set(privateRef, {
+      ...own,
+      drawn: [],
+      drawnRevision: -1,
+      updatedAt: Timestamp.now()
+    });
+    tx.set(actionRef, {
+      by: 'uid-host',
+      type: 'tour-card',
+      summary: 'Alice a validé sa carte.',
+      createdAt: Timestamp.now()
+    });
+    assert.equal(current.currentPlayerUid, 'uid-host');
   }));
 });
