@@ -58,3 +58,37 @@ test('le contrôle de confidentialité descend dans les objets imbriqués', () =
     /donnée privée/
   );
 });
+
+test('les fonctions des cartes V8 ne sont jamais envoyées à Firestore', () => {
+  const card = {
+    name: 'Vendange collective',
+    type: 'cdm-b',
+    effet: 'Effet de test',
+    played: false,
+    appliquer: () => 'ne doit pas être sérialisé'
+  };
+  const hand = api.serializeHand({ cdm: [card], mat: [] });
+  assert.deepEqual(hand.cdm[0], {
+    name: 'Vendange collective',
+    type: 'cdm-b',
+    effet: 'Effet de test',
+    played: false
+  });
+  assert.equal(Object.hasOwn(hand.cdm[0], 'appliquer'), false);
+  assert.doesNotThrow(() => JSON.stringify(hand));
+});
+
+test('une main sérialisée peut retrouver sa logique locale depuis le catalogue', () => {
+  const definition = {
+    name: 'Foudre en chêne',
+    type: 'mat-b',
+    effet: 'Effet de test',
+    appliquer: () => 'ok'
+  };
+  const restored = api.hydrateHand(
+    { cdm: [], mat: [{ name: definition.name, type: definition.type, played: true }] },
+    { cdm: [], mat: [definition] }
+  );
+  assert.equal(restored.mat[0].played, true);
+  assert.equal(typeof restored.mat[0].appliquer, 'function');
+});
