@@ -1,5 +1,9 @@
 name: V9 checks
 
+concurrency:
+  group: v9-checks-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [v9-multijoueur]
