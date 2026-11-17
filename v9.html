@@ -1409,7 +1409,7 @@ async function createOnlineRoom(){
       status: 'waiting',
       maxPlayers: 4,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      version: 8
+      version: 9
     });
     await roomRef.collection('members').doc(v8User.uid).set({
       uid: v8User.uid,
