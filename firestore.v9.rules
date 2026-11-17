@@ -122,7 +122,7 @@ service cloud.firestore {
         && player.keys().hasOnly(['uid', 'name', 'cepage', 'terroir', 'mode', 'q', 'a', 'r'])
         && player.keys().hasAll(['uid', 'name', 'cepage', 'terroir', 'mode', 'q', 'a', 'r'])
         && player.uid is string
-        && player.name is string
+        && player.name is string && player.name.size() <= 24
         && validTrait(player.cepage)
         && validTrait(player.terroir)
         && validMode(player.mode)
@@ -188,9 +188,15 @@ service cloud.firestore {
       return chosen is list
         && chosen.size() <= players.size()
         && (chosen.size() < 1 || validChosenItem(chosen[0], players))
-        && (chosen.size() < 2 || validChosenItem(chosen[1], players))
-        && (chosen.size() < 3 || validChosenItem(chosen[2], players))
-        && (chosen.size() < 4 || validChosenItem(chosen[3], players));
+        && (chosen.size() < 2 || (validChosenItem(chosen[1], players)
+          && chosen[0].playerUid != chosen[1].playerUid))
+        && (chosen.size() < 3 || (validChosenItem(chosen[2], players)
+          && chosen[0].playerUid != chosen[2].playerUid
+          && chosen[1].playerUid != chosen[2].playerUid))
+        && (chosen.size() < 4 || (validChosenItem(chosen[3], players)
+          && chosen[0].playerUid != chosen[3].playerUid
+          && chosen[1].playerUid != chosen[3].playerUid
+          && chosen[2].playerUid != chosen[3].playerUid));
     }
 
     function validChosenItem(item, players) {
@@ -239,7 +245,7 @@ service cloud.firestore {
           'q', 'a', 'r', 'ready', 'updatedAt'
         ])
         && data.uid == uid
-        && data.name is string
+        && data.name is string && data.name.size() <= 24
         && validTrait(data.cepage)
         && validTrait(data.terroir)
         && validMode(data.mode)
