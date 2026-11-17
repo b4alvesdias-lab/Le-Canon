@@ -250,6 +250,18 @@
     }
   }
 
+  function renderScoreboard() {
+    const rows = G.players.map(player => {
+      const total = player.q * 2 + player.a + player.r;
+      return '<div class="auto-row"><span><b>' + player.name + '</b></span><span>⭐ ' +
+        player.q + ' · 🌸 ' + player.a + ' · 🍾 ' + player.r +
+        ' <b style="color:var(--gold2);">= ' + total + ' pts</b></span></div>';
+    }).join('');
+    return '<div class="card" style="margin-top:14px;"><div class="card-top"></div>' +
+      '<div class="cname" style="font-size:1rem;">📊 Scores en direct</div>' +
+      '<div class="auto-score">' + rows + '</div></div>';
+  }
+
   function renderOnlineGame() {
     if (!state) return;
     if (state.status === 'finished') {
@@ -267,6 +279,7 @@
         '</div><p>Les cartes de ce joueur sont privées. Le jeu avancera automatiquement après son choix.</p></div>';
       document.getElementById('g-actions').innerHTML = '';
       document.getElementById('g-hand').innerHTML = '';
+      document.getElementById('g-body').insertAdjacentHTML('beforeend', renderScoreboard());
       go('p-game');
       return;
     }
@@ -299,6 +312,7 @@
     document.getElementById('g-actions').innerHTML =
       '<button class="btn btn-gold" id="btn-ok" onclick="confirmPick()" style="display:none;">Confirmer la carte ✓</button>';
     renderHand();
+    document.getElementById('g-body').insertAdjacentHTML('beforeend', renderScoreboard());
     go('p-game');
   }
 
