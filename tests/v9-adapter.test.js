@@ -78,3 +78,10 @@ test('la reconstruction d’un joueur restaure les fonctions depuis les catalogu
   assert.equal(typeof player.cdm[0].appliquer, 'function');
   assert.equal(typeof player.mat[0].appliquer, 'function');
 });
+
+test('les pseudos publics sont nettoyés avant insertion dans le HTML', () => {
+  const cleaned = adapter.publicProfile(profile('<b>Alice</b>'), 'uid-a');
+  assert.equal(cleaned.name, 'bAlice/b');
+  assert.equal(cleaned.name.includes('<'), false);
+  assert.equal(cleaned.name.includes('>'), false);
+});
