@@ -17,6 +17,7 @@
   let setupUnsub = null;
   let membersUnsub = null;
   let preparingTurn = false;
+  let submittingTurn = false;
   let renderedRevision = -1;
 
   const originalAttach = attachOnlineRoom;
@@ -339,13 +340,14 @@
   }
 
   async function confirmOnlinePick() {
-    if (!state || state.currentPlayerUid !== v8User.uid) return;
+    if (!state || state.currentPlayerUid !== v8User.uid || submittingTurn) return;
     if (G.chosen === null || !G.drawn[G.chosen]) {
       toast('Choisis une carte de tour !', 'warn');
       return;
     }
     const selected = G.drawn[G.chosen];
     const currentIndex = ownIndex();
+    submittingTurn = true;
     G.allChosen.push({ player: currentIndex, card: selected });
     const uids = uidList();
     try {
@@ -398,6 +400,8 @@
         player: G.players.findIndex(p => p.uid === item.playerUid), card: item.card
       })).filter(item => item.player >= 0);
       toast(firebaseFriendlyError(err), 'warn');
+    } finally {
+      submittingTurn = false;
     }
   }
 
