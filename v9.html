@@ -1337,11 +1337,15 @@ function initFirebaseV8(){
     if(!window.firebase){
       throw new Error("Le SDK Firebase n'a pas pu être chargé. Vérifie ta connexion Internet.");
     }
-    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG_V8);
+    // Les émulateurs ne sont utilisés que sur la page de test avec ?emulator=1.
+    const emulatorMode = new URLSearchParams(window.location.search).get('emulator') === '1';
+    const firebaseConfig = emulatorMode
+      ? { ...FIREBASE_CONFIG_V8, projectId: 'demo-le-canon-v9' }
+      : FIREBASE_CONFIG_V8;
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     v8Auth = firebase.auth();
     v8Db = firebase.firestore();
-    // Les émulateurs ne sont utilisés que sur la page de test avec ?emulator=1.
-    if(new URLSearchParams(window.location.search).get('emulator') === '1'){
+    if(emulatorMode){
       v8Auth.useEmulator('http://127.0.0.1:9099');
       v8Db.useEmulator('127.0.0.1', 8080);
     }
