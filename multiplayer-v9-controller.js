@@ -102,7 +102,6 @@
   async function prepareMyVigneron() {
     try {
       if (!v8User) await ensureOnlineUser();
-      mp.configure(v8Db, v8RoomCode, v8User.uid);
       const member = members.find(m => m.uid === v8User.uid);
       const savedProfile = setupProfiles.find(profile => profile.uid === v8User.uid);
       let p;
@@ -143,7 +142,6 @@
     }
     try {
       localSetupPlayer = p;
-      mp.configure(v8Db, v8RoomCode, v8User.uid);
       const profile = adapter.publicProfile(p, v8User.uid);
       await mp.saveOwnSetup(profile, p);
       setOnlineStatus('Préparation enregistrée. En attente des autres joueurs.');
