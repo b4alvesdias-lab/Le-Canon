@@ -347,6 +347,7 @@
     }
     const selected = G.drawn[G.chosen];
     const currentIndex = ownIndex();
+    const scoresBefore = G.players.map(p => ({ q:p.q, a:p.a, r:p.r }));
     submittingTurn = true;
     G.allChosen.push({ player: currentIndex, card: selected });
     const uids = uidList();
@@ -395,7 +396,8 @@
       });
       toast('Tour terminé ! Les scores sont mis à jour.');
     } catch (err) {
-      // La transaction a échoué : l’état local sera réhydraté depuis Firestore.
+      // La transaction a échoué : restaurer le score local et relire l’état partagé.
+      G.players.forEach((p, i) => Object.assign(p, scoresBefore[i]));
       G.allChosen = (state.allChosen || []).map(item => ({
         player: G.players.findIndex(p => p.uid === item.playerUid), card: item.card
       })).filter(item => item.player >= 0);
