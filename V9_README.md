@@ -6,7 +6,7 @@ Cette branche est la base de travail V9. La branche `main` et le site GitHub Pag
 
 - V8 : création et accès aux salons vérifiés sur deux téléphones.
 - V9 : couche Firestore et adaptateur de données V8 ajoutés ; préparation individuelle, profils publics, mains privées, tirage privé lié à une révision et validation de carte proposée sont implémentés au niveau des modules.
-- V9 est en cours d’intégration : `v9.html` charge le contrôleur et les modules V9. Le parcours complet n’a pas encore été validé dans un navigateur avec deux comptes. Les règles Firestore V9 restent un brouillon et devront être fusionnées aux règles actives avant tout test Firebase réel.
+- V9 est en cours d’intégration : `v9.html` charge le contrôleur et les modules V9. Le parcours complet n’a pas encore été validé dans un navigateur avec deux comptes. Le fragment `firestore.v9.rules` est testé dans l’émulateur, mais il ne contient pas les règles racine V8 de création/rejoindre des salons. Il devra être fusionné aux règles actives avant tout test Firebase réel.
 - Les règles Firestore V9 sont un brouillon ; elles ne doivent pas être publiées.
 
 ## Schéma de travail V9
@@ -25,7 +25,8 @@ Les mains, cartes spéciales et trois cartes de tour proposées ne doivent jamai
 - `multiplayer-v9-controller.js` : raccorde le salon, la préparation individuelle, les choix de tour, les cartes spéciales et les scores au moteur V8.
 - `v9.html` : copie de test qui charge les modules V9 ; `index.html` reste la V8 sur cette branche.
 - `docs/v9-integration-plan.md` : correspondance avec le moteur V8 et étapes d’intégration.
-- `docs/firestore-rules-v9-draft.md` : brouillon de règles correspondant au nouveau schéma.
+- `firestore.v9.rules` : fragment strict testé dans l’émulateur Firestore ; il ne remplace pas les règles V8.
+- `docs/firestore-rules-v9-draft.md` : explication historique et avertissements sur la fusion des règles.
 - `FIRESTORE_RULES_V9.txt` : ancien brouillon archivé, obsolète et à ne pas publier.
 
 ## Sécurité
