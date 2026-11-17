@@ -26,7 +26,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Installer les dépendances des tests Firestore
-        run: npm install
+        run: npm install --no-audit --no-fund
       - name: Tester les règles Firestore dans l’émulateur
         run: npx firebase emulators:exec --only firestore --project demo-le-canon-v9 "npm run test:rules"
       - name: Vérifier la syntaxe du module V9
