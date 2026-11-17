@@ -99,7 +99,7 @@
       }
     },
 
-    async createGame(publicState, privateHand) {
+    async createGame(publicState) {
       const roomRef = this.roomRef();
       const stateRef = roomRef.collection('game').doc('state');
       const privateRef = roomRef.collection('private').doc(this.uid);
