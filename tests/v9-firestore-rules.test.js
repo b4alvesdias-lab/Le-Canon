@@ -73,10 +73,10 @@ const path = suffix => 'rooms/' + roomId + '/' + suffix;
 const dbFor = uid => env.authenticatedContext(uid).firestore();
 
 async function prepareBoth() {
-  await assertSucceeds(setDoc(doc(dbFor('uid-host'), path('game/players/items/uid-host')), setupProfile('uid-host', 'Alice')));
-  await assertSucceeds(setDoc(doc(dbFor('uid-guest'), path('game/players/items/uid-guest')), setupProfile('uid-guest', 'Bob')));
   await assertSucceeds(setDoc(doc(dbFor('uid-host'), path('private/uid-host')), privateData('uid-host')));
   await assertSucceeds(setDoc(doc(dbFor('uid-guest'), path('private/uid-guest')), privateData('uid-guest')));
+  await assertSucceeds(setDoc(doc(dbFor('uid-host'), path('game/players/items/uid-host')), setupProfile('uid-host', 'Alice')));
+  await assertSucceeds(setDoc(doc(dbFor('uid-guest'), path('game/players/items/uid-guest')), setupProfile('uid-guest', 'Bob')));
 }
 
 before(async () => {
@@ -104,8 +104,9 @@ test('chaque joueur écrit son profil et lit uniquement sa propre main', async (
   const hostDb = dbFor('uid-host');
   const guestDb = dbFor('uid-guest');
   await assertSucceeds(setDoc(doc(hostDb, path('private/uid-host')), privateData('uid-host')));
-  await assertSucceeds(setDoc(doc(guestDb, path('game/players/items/uid-guest')), setupProfile('uid-guest', 'Bob')));
+  await assertFails(setDoc(doc(guestDb, path('game/players/items/uid-guest')), setupProfile('uid-guest', 'Bob')));
   await assertSucceeds(setDoc(doc(guestDb, path('private/uid-guest')), privateData('uid-guest')));
+  await assertSucceeds(setDoc(doc(guestDb, path('game/players/items/uid-guest')), setupProfile('uid-guest', 'Bob')));
   await assertSucceeds(getDoc(doc(guestDb, path('private/uid-guest'))));
   await assertFails(getDoc(doc(guestDb, path('private/uid-host'))));
 });
