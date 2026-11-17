@@ -68,7 +68,7 @@
     const start = document.getElementById('v9-start');
     const box = document.getElementById('online-room-message');
     if (!prepare || !start) return;
-    const ownReady = setupProfiles.some(p => p.uid === v8User.uid && p.ready);
+    const ownReady = !!(v8User && setupProfiles.some(p => p.uid === v8User.uid && p.ready));
     prepare.textContent = ownReady ? 'Modifier ma préparation' : 'Préparer mon vigneron';
     prepare.style.display = state ? 'none' : 'block';
     const readyCount = setupProfiles.filter(p => p.ready).length;
