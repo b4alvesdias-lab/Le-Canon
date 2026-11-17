@@ -174,6 +174,75 @@
       );
     },
 
+    async saveOwnSetup(publicProfile, privateHand) {
+      const roomRef = this.roomRef();
+      const profile = publicProfile || {};
+      this.assertPublicData(profile, 'player');
+      if (!profile.uid || profile.uid !== this.uid) {
+        throw new Error('Le profil doit correspondre au joueur connecté.');
+      }
+      await this.assertMember();
+      await roomRef.collection('game').doc('players').collection('items').doc(this.uid).set({
+        ...profile,
+        uid: this.uid,
+        ready: true,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await roomRef.collection('private').doc(this.uid).set({
+        uid: this.uid,
+        hand: privateHand ? this.serializeHand(privateHand) : { cdm: [], mat: [] },
+        drawn: [],
+        drawnRevision: -1,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    },
+
+    listenSetupPlayers(callback) {
+      const ref = this.roomRef().collection('game').doc('players').collection('items');
+      return ref.onSnapshot(snapshot => {
+        if (typeof callback === 'function') {
+          callback(snapshot.docs.map(doc => doc.data()));
+        }
+      }, err => console.error('[Canon V9] préparations joueurs', err));
+    },
+
+    async prepareOwnTurn(drawnCards) {
+      const roomRef = this.roomRef();
+      const stateRef = roomRef.collection('game').doc('state');
+      const privateRef = roomRef.collection('private').doc(this.uid);
+      const proposed = Array.isArray(drawnCards) ? drawnCards.map(card => this.serializeTurnCard(card)) : [];
+      return this.db.runTransaction(async tx => {
+        const stateSnap = await tx.get(stateRef);
+        const privateSnap = await tx.get(privateRef);
+        if (!stateSnap.exists || !privateSnap.exists) throw new Error('Partie ou main introuvable.');
+        const state = stateSnap.data();
+        if (state.status !== 'playing' || state.currentPlayerUid !== this.uid) {
+          throw new Error('Ce n’est pas ton tour.');
+        }
+        const revision = Number(state.revision);
+        const saved = privateSnap.data();
+        if (Number(saved.drawnRevision) === revision && Array.isArray(saved.drawn)) {
+          return saved.drawn;
+        }
+        tx.set(privateRef, {
+          drawn: proposed,
+          drawnRevision: revision,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        return proposed;
+      });
+    },
+
+    serializeTurnCard(card) {
+      if (!card || typeof card.name !== 'string') throw new Error('Carte de tour invalide.');
+      return {
+        name: card.name,
+        bonus: typeof card.bonus === 'string' ? card.bonus : '',
+        malus: typeof card.malus === 'string' ? card.malus : '',
+        assoc: typeof card.assoc === 'string' ? card.assoc : ''
+      };
+    },
+
     async updateOwnHand(hand) {
       await this.assertMember();
       const ref = this.roomRef().collection('private').doc(this.uid);
@@ -200,6 +269,9 @@
         }
         if (!snap.exists) throw new Error('La partie en ligne n’a pas été initialisée.');
         const current = snap.data();
+        const privateRef = roomRef.collection('private').doc(this.uid);
+        const privateSnap = await tx.get(privateRef);
+        if (!privateSnap.exists) throw new Error('Main privée introuvable.');
         if (current.status !== 'playing') throw new Error('La partie n’est pas en cours.');
         if (current.currentPlayerUid !== this.uid) throw new Error('Ce n’est pas ton tour.');
         if (Number(current.revision) !== Number(expectedRevision)) {
@@ -209,6 +281,14 @@
           ? nextState.players.map(player => player && player.uid).filter(Boolean)
           : [];
         const nextUid = nextState.currentPlayerUid;
+        if (action && action.cardName) {
+          const ownPrivate = privateSnap.data();
+          const options = Array.isArray(ownPrivate.drawn) ? ownPrivate.drawn : [];
+          if (Number(ownPrivate.drawnRevision) !== Number(current.revision) ||
+              !options.some(card => card.name === action.cardName)) {
+            throw new Error('Cette carte ne fait pas partie de tes propositions pour ce tour.');
+          }
+        }
         if (!nextUid || !playerUids.includes(nextUid)) {
           throw new Error('Le prochain joueur est invalide.');
         }
@@ -222,6 +302,11 @@
           revision: Number(current.revision) + 1,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        tx.set(privateRef, {
+          drawn: [],
+          drawnRevision: -1,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
         tx.set(actionRef, {
           by: this.uid,
           type: String(action && action.type || 'turn').slice(0, 40),
