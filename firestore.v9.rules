@@ -172,15 +172,12 @@ service cloud.firestore {
     function v9ValidPublicPlayerShape(player) {
       return player is map
         && player.keys().hasOnly(['uid', 'name', 'cepage', 'terroir', 'mode', 'q', 'a', 'r'])
-        && player.uid is string
-        && player.name is string
         && player.cepage is map
         && player.cepage.keys().hasOnly(['name', 'desc', 'bonus', 'malus', 'assoc'])
         && player.terroir is map
         && player.terroir.keys().hasOnly(['name', 'desc', 'bonus', 'malus', 'assoc'])
         && player.mode is map
-        && player.mode.keys().hasOnly(['name', 'bonus', 'malus', 'assoc'])
-        && player.q is number && player.a is number && player.r is number;
+        && player.mode.keys().hasOnly(['name', 'bonus', 'malus', 'assoc']);
     }
 
     function v9ValidChosenShape(item) {
@@ -200,7 +197,7 @@ service cloud.firestore {
         ])
         && data.schemaVersion == 9
         && data.status in ['playing', 'finished']
-        && data.revision is int
+        && data.revision is int && data.revision >= 1
         && data.players is list
         && data.players.size() >= 2 && data.players.size() <= 4
         && v9ValidPublicPlayerShape(data.players[0])
