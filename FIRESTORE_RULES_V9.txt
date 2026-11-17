@@ -1,0 +1,76 @@
+// Le Canon V9 — règles Firestore proposées
+// À publier dans Firebase uniquement lorsque le code V9 correspondant sera déployé.
+// Ces règles remplacent les règles V8 : ne pas les mélanger avec l'ancien schéma.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function roomPath(roomId) {
+      return /databases/$(database)/documents/rooms/$(roomId);
+    }
+    function isMember(roomId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid));
+    }
+    function isHost(roomId) {
+      return signedIn()
+        && get(roomPath(roomId)).data.hostUid == request.auth.uid;
+    }
+
+    match /rooms/{roomId} {
+      allow create: if signedIn()
+        && request.resource.data.hostUid == request.auth.uid
+        && request.resource.data.status == 'waiting'
+        && request.resource.data.maxPlayers in [2, 3, 4];
+
+      // Un salon n'est lisible que par ses membres.
+      allow get: if isMember(roomId);
+      allow list: if false;
+      allow update: if isHost(roomId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'gameStatus', 'updatedAt']);
+      allow delete: if isHost(roomId);
+
+      match /members/{uid} {
+        allow read: if isMember(roomId);
+        allow create: if signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.uid == uid
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 18;
+        allow update: if signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['name', 'ready', 'lastSeen']);
+        allow delete: if signedIn()
+          && (request.auth.uid == uid || isHost(roomId));
+      }
+
+      // État commun : les clients membres peuvent lire; seul l'hôte écrit.
+      match /public/{docId} {
+        allow read: if isMember(roomId);
+        allow create, update, delete: if isHost(roomId);
+      }
+
+      // Main privée : chaque joueur ne peut lire/écrire que son propre document.
+      match /privateHands/{uid} {
+        allow read, create, update, delete: if signedIn()
+          && request.auth.uid == uid
+          && isMember(roomId);
+      }
+
+      // Les joueurs envoient leurs intentions; l'hôte les traite.
+      match /actions/{actionId} {
+        allow create: if signedIn()
+          && isMember(roomId)
+          && request.resource.data.uid == request.auth.uid;
+        allow read: if isHost(roomId)
+          || (signedIn() && resource.data.uid == request.auth.uid);
+        allow update, delete: if isHost(roomId);
+      }
+    }
+  }
+}
