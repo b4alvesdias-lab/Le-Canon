@@ -191,12 +191,8 @@
         throw new Error('Le profil doit correspondre au joueur connecté.');
       }
       await this.assertMember();
-      await roomRef.collection('game').doc('players').collection('items').doc(this.uid).set({
-        ...profile,
-        uid: this.uid,
-        ready: true,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      // Écrire d'abord la main privée : le profil "ready" n'est publié qu'une fois
+      // la main persistée, afin que l'hôte ne lance pas une partie trop tôt.
       await roomRef.collection('private').doc(this.uid).set({
         uid: this.uid,
         hand: privateHand ? this.serializeHand(privateHand) : { cdm: [], mat: [] },
@@ -204,6 +200,12 @@
         drawnRevision: -1,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
+      await roomRef.collection('game').doc('players').collection('items').doc(this.uid).set({
+        ...profile,
+        uid: this.uid,
+        ready: true,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
     },
 
     listenSetupPlayers(callback) {
