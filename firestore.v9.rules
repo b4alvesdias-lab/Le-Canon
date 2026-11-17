@@ -1,3 +1,6 @@
+// V9 SUBCOLLECTION RULES FOR EMULATOR TESTS ONLY.
+// Do NOT publish this file as the complete Firebase ruleset: merge these match blocks
+// into the active V8 rules so room creation, joining and members keep working.
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
