@@ -490,6 +490,10 @@
   };
 
   leaveOnlineRoom = async function () {
+    if (state && state.status === 'playing') {
+      toast('La partie est en cours. Pour ne pas bloquer les autres joueurs, ferme simplement cette page et reviens avec le même code.');
+      return;
+    }
     stopV9();
     state = null;
     ownPrivate = null;
