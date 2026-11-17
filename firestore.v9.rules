@@ -263,6 +263,41 @@ service cloud.firestore {
         && data.updatedAt is timestamp;
     }
 
+    // Minimal V8 salon rules used only by the local emulator end-to-end tests.
+    // Do not copy this fixture over the active V8 room/member rules.
+    match /rooms/{roomId} {
+      allow read: if v9SignedIn();
+      allow create: if v9SignedIn()
+        && request.resource.data.keys().hasOnly(['code', 'hostUid', 'status', 'maxPlayers', 'createdAt', 'version'])
+        && request.resource.data.code == roomId
+        && request.resource.data.hostUid == request.auth.uid
+        && request.resource.data.status == 'waiting'
+        && request.resource.data.maxPlayers == 4
+        && request.resource.data.createdAt is timestamp;
+      allow delete: if v9SignedIn()
+        && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostUid == request.auth.uid;
+
+      match /members/{memberUid} {
+        allow read: if v9SignedIn();
+        allow create: if v9SignedIn()
+          && request.auth.uid == memberUid
+          && exists(/databases/$(database)/documents/rooms/$(roomId))
+          && get(/databases/$(database)/documents/rooms/$(roomId)).data.status == 'waiting'
+          && request.resource.data.keys().hasOnly(['uid', 'name', 'role', 'joinedAt'])
+          && request.resource.data.uid == memberUid
+          && request.resource.data.name is string
+          && request.resource.data.role in ['host', 'player']
+          && request.resource.data.joinedAt is timestamp
+          && ((request.resource.data.role == 'host'
+            && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostUid == memberUid)
+            || (request.resource.data.role == 'player'
+              && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostUid != memberUid));
+        allow delete: if v9SignedIn()
+          && (request.auth.uid == memberUid
+            || get(/databases/$(database)/documents/rooms/$(roomId)).data.hostUid == request.auth.uid);
+      }
+    }
+
     match /rooms/{roomId}/game/state {
       allow read: if v9IsMember(roomId);
       allow create: if v9IsHost(roomId)
