@@ -26,6 +26,7 @@
   const originalConfirmPick = confirmPick;
   const originalPlayHandCard = playHandCard;
   const originalEndGame = endGame;
+  const originalNewGame = newGame;
 
   function online() {
     return !!(v8RoomCode && v8User && v8Db && state);
@@ -548,6 +549,18 @@
   endGame = function () {
     if (online()) return originalEndGame();
     return originalEndGame();
+  };
+
+  newGame = function () {
+    if (state && state.status === 'finished') {
+      stopV9();
+      state = null;
+      ownPrivate = null;
+      localSetupPlayer = null;
+      originalLeave().finally(() => originalNewGame());
+      return;
+    }
+    return originalNewGame();
   };
 
   window.addEventListener('load', () => {
