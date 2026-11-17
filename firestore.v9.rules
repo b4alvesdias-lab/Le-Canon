@@ -264,9 +264,16 @@ service cloud.firestore {
 
     match /rooms/{roomId}/private/{playerUid} {
       allow read: if isMember(roomId) && request.auth.uid == playerUid;
-      allow create, update: if isMember(roomId)
+      allow create: if isMember(roomId)
         && request.auth.uid == playerUid
+        && !exists(/databases/$(database)/documents/rooms/$(roomId)/game/state)
         && validPrivateData(request.resource.data, playerUid);
+      allow update: if isMember(roomId)
+        && request.auth.uid == playerUid
+        && validPrivateData(request.resource.data, playerUid)
+        && exists(/databases/$(database)/documents/rooms/$(roomId)/game/state)
+        && get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.status == 'playing'
+        && get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.currentPlayerUid == request.auth.uid;
       allow delete: if false;
     }
 
@@ -276,6 +283,9 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['by', 'type', 'summary', 'createdAt'])
         && request.resource.data.keys().hasAll(['by', 'type', 'summary', 'createdAt'])
         && request.resource.data.by == request.auth.uid
+        && exists(/databases/$(database)/documents/rooms/$(roomId)/game/state)
+        && get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.status == 'playing'
+        && get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.currentPlayerUid == request.auth.uid
         && request.resource.data.type is string
         && request.resource.data.type.size() <= 40
         && request.resource.data.summary is string
