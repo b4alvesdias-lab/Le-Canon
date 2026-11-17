@@ -17,6 +17,6 @@ jobs:
         with:
           node-version: 20
       - name: Vérifier la syntaxe du module V9
-        run: node --check multiplayer-v9.js
+        run: node --check multiplayer-v9.js && node --check multiplayer-v9-adapter.js
       - name: Vérifier les tests du contrat privé/public
-        run: node --test tests/v9-contract.test.js
+        run: node --test tests/v9-contract.test.js tests/v9-adapter.test.js
