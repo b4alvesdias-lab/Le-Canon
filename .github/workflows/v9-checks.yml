@@ -1,0 +1,22 @@
+name: V9 checks
+
+on:
+  push:
+    branches: [v9-multijoueur]
+  pull_request:
+    branches: [v9-multijoueur]
+
+jobs:
+  syntax-and-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Vérifier la syntaxe du module V9
+        run: node --check multiplayer-v9.js
+      - name: Vérifier les tests du contrat privé/public
+        run: node --test tests/v9-contract.test.js
