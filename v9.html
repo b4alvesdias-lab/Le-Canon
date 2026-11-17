@@ -207,7 +207,7 @@ hr{border:none;border-top:1px solid rgba(255,255,255,.07);margin:14px 0;}
   <span class="grape">🍇</span>
   <h1>Le Canon</h1>
   <p class="center" style="margin:6px 0 4px;">Jeu de cartes viticole</p>
-  <p class="center" style="margin-bottom:8px;font-size:.8rem;">Région d'Arbois • Jura</p><p class="center" style="margin-bottom:24px;font-size:.7rem;color:var(--gold);">VERSION 8 — SALONS EN LIGNE (BÊTA)</p>
+  <p class="center" style="margin-bottom:8px;font-size:.8rem;">Région d'Arbois • Jura</p><p class="center" style="margin-bottom:24px;font-size:.7rem;color:var(--gold);">VERSION 9 — MULTIJOUEUR (TEST)</p>
 
   <h2>Mode de jeu</h2>
   <div style="display:flex;gap:10px;margin-bottom:20px;">
@@ -1340,6 +1340,11 @@ function initFirebaseV8(){
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG_V8);
     v8Auth = firebase.auth();
     v8Db = firebase.firestore();
+    // Les émulateurs ne sont utilisés que sur la page de test avec ?emulator=1.
+    if(new URLSearchParams(window.location.search).get('emulator') === '1'){
+      v8Auth.useEmulator('http://127.0.0.1:9099');
+      v8Db.useEmulator('127.0.0.1', 8080);
+    }
     return true;
   }catch(err){
     console.error(err);
