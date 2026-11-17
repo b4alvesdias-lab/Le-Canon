@@ -4,6 +4,7 @@
 // plus au module multiplayer-v9.js.
 //
 // Le schéma de travail actuel est décrit dans :
+// firestore.v9.rules (fragment testé dans l’émulateur, à fusionner avec V8)
 // docs/firestore-rules-v9-draft.md
 // rooms/{code}/game/state
 // rooms/{code}/private/{uid}
