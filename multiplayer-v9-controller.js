@@ -218,6 +218,7 @@
     G.chosen = null;
     renderedRevision = -1;
     if (ownPrivate) applyPrivate(ownPrivate);
+    refreshLobby();
     renderOnlineGame();
   }
 
