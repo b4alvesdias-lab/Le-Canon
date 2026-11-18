@@ -472,6 +472,7 @@
   attachOnlineRoom = function (code) {
     detachOnlineRoomListeners();
     v8RoomCode = code;
+    try { window.localStorage.setItem('le-canon-v9-room', String(code).trim().toUpperCase()); } catch (err) { console.warn('[Canon V9] mémorisation du salon indisponible', err); }
     state = null;
     ownPrivate = null;
     setupProfiles = [];
@@ -534,6 +535,7 @@
       return;
     }
     stopV9();
+    try { window.localStorage.removeItem('le-canon-v9-room'); } catch (err) { console.warn('[Canon V9] suppression du salon mémorisé impossible', err); }
     state = null;
     ownPrivate = null;
     localSetupPlayer = null;
@@ -572,6 +574,7 @@
   newGame = function () {
     if (state && state.status === 'finished') {
       stopV9();
+      try { window.localStorage.removeItem('le-canon-v9-room'); } catch (err) { console.warn('[Canon V9] suppression du salon mémorisé impossible', err); }
       state = null;
       ownPrivate = null;
       localSetupPlayer = null;
@@ -581,8 +584,52 @@
     return originalNewGame();
   };
 
+  // Après un rechargement, Firebase restaure normalement l'identité anonyme locale.
+  // On réutilise cette identité pour vérifier l'appartenance au salon et réattacher
+  // les écouteurs Firestore : l'état public et la main privée reconstruisent alors l'écran.
+  function restoreOnlineRoomAfterReload() {
+    if (!v8Auth && typeof initFirebaseV8 === 'function') initFirebaseV8();
+    if (!v8Auth) return;
+    let restoringUid = null;
+    v8Auth.onAuthStateChanged(async user => {
+      if (!user) return;
+      v8User = user;
+      let code = null;
+      try { code = window.localStorage.getItem('le-canon-v9-room'); } catch (err) {
+        console.warn('[Canon V9] lecture du salon mémorisé impossible', err);
+      }
+      if (!code || restoringUid === user.uid) return;
+      restoringUid = user.uid;
+      code = String(code).trim().toUpperCase();
+      try {
+        const roomRef = v8Db.collection('rooms').doc(code);
+        const roomSnap = await roomRef.get();
+        const memberSnap = await roomRef.collection('members').doc(user.uid).get();
+        if (!roomSnap.exists || !memberSnap.exists) {
+          try { window.localStorage.removeItem('le-canon-v9-room'); } catch (_) {}
+          setOnlineStatus('Ancien salon introuvable pour cette session. Rejoins un salon avec son code.', true);
+          return;
+        }
+        v8IsHost = roomSnap.data().hostUid === user.uid;
+        attachOnlineRoom(code);
+        const status = roomSnap.data().status;
+        if (status === 'playing') {
+          setOnlineStatus('Partie retrouvée : reconnexion en cours…');
+        } else if (status === 'finished') {
+          setOnlineStatus('Salon retrouvé. La partie est terminée.');
+        } else {
+          setOnlineStatus('Salon retrouvé.');
+        }
+      } catch (err) {
+        restoringUid = null;
+        setOnlineStatus(firebaseFriendlyError(err), true);
+      }
+    });
+  }
+
   window.addEventListener('load', () => {
     const lobby = document.getElementById('p-online-lobby');
     if (lobby) ensureLobbyControls();
+    restoreOnlineRoomAfterReload();
   });
 })();
