@@ -359,6 +359,11 @@
     const currentIndex = ownIndex();
     const scoresBefore = G.players.map(p => ({ q:p.q, a:p.a, r:p.r }));
     submittingTurn = true;
+    // Verrouiller immédiatement le bouton jusqu'à réception de la nouvelle révision Firestore.
+    // Sans cette révision attendue, le finally pouvait réactiver l'écran avant le snapshot,
+    // laissant le joueur retaper et provoquer une validation avec un état devenu obsolète.
+    committingRevision = Number(state.revision) + 1;
+    renderOnlineGame();
     G.allChosen.push({ player: currentIndex, card: selected });
     const uids = uidList();
     try {
