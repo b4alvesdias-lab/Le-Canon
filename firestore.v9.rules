@@ -1,0 +1,364 @@
+// EMULATOR-ONLY RULESET: simplified V8 room/member fixtures plus V9 subcollection rules.
+// Do NOT publish this file as the complete Firebase ruleset.
+// For the real project, copy only the helper functions and V9 match blocks from FIRESTORE_V9_MERGE_FRAGMENT.txt.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function v9SignedIn() {
+      return request.auth != null;
+    }
+
+    function v9MemberPath(roomId, uid) {
+      return /databases/$(database)/documents/rooms/$(roomId)/members/$(uid);
+    }
+
+    function v9IsMember(roomId) {
+      return v9SignedIn()
+        && exists(v9MemberPath(roomId, request.auth.uid));
+    }
+
+    function v9IsHost(roomId) {
+      return v9IsMember(roomId)
+        && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostUid == request.auth.uid;
+    }
+
+    function v9IsRoomMember(roomId, uid) {
+      return uid is string && exists(v9MemberPath(roomId, uid));
+    }
+
+    function v9IsReady(roomId, uid) {
+      let path = /databases/$(database)/documents/rooms/$(roomId)/game/players/items/$(uid);
+      return exists(path) && get(path).data.ready == true;
+    }
+
+    function v9HasPrivateSetup(roomId, uid) {
+      let path = /databases/$(database)/documents/rooms/$(roomId)/private/$(uid);
+      return exists(path)
+        && get(path).data.uid == uid
+        && get(path).data.hand is map;
+    }
+
+    function v9ValidCardDefinition(card) {
+      return card is map
+        && card.keys().hasOnly(['name', 'type', 'effet', 'played']);
+    }
+
+    function v9ValidPrivateHand(hand) {
+      return hand is map
+        && hand.keys().hasOnly(['cdm', 'mat'])
+        && hand.keys().hasAll(['cdm', 'mat'])
+        && hand.cdm is list && hand.cdm.size() <= 12
+        && hand.mat is list && hand.mat.size() <= 12;
+    }
+
+    function v9ValidDrawn(cards) {
+      return cards is list
+        && cards.size() <= 3
+        && (cards.size() < 1 || v9ValidTurnCard(cards[0]))
+        && (cards.size() < 2 || v9ValidTurnCard(cards[1]))
+        && (cards.size() < 3 || v9ValidTurnCard(cards[2]));
+    }
+
+    function v9ValidTurnCard(card) {
+      return card is map
+        && card.keys().hasOnly(['name', 'bonus', 'malus', 'assoc']);
+    }
+
+    function v9ValidPrivateData(data, uid) {
+      return data is map
+        && data.keys().hasOnly(['uid', 'hand', 'drawn', 'drawnRevision', 'updatedAt'])
+        && data.keys().hasAll(['uid', 'hand', 'drawn', 'drawnRevision', 'updatedAt'])
+        && data.uid == uid
+        && v9ValidPrivateHand(data.hand)
+        && v9ValidDrawn(data.drawn)
+        && data.drawnRevision is int
+        && data.drawnRevision >= -1
+        && data.updatedAt is timestamp;
+    }
+
+    function v9ValidTrait(trait) {
+      return trait is map
+        && trait.keys().hasOnly(['name', 'desc', 'bonus', 'malus', 'assoc']);
+    }
+
+    function v9ValidMode(mode) {
+      return mode is map
+        && mode.keys().hasOnly(['name', 'bonus', 'malus', 'assoc']);
+    }
+
+    function v9ValidPublicPlayer(player) {
+      return player is map
+        && player.keys().hasOnly(['uid', 'name', 'cepage', 'terroir', 'mode', 'q', 'a', 'r'])
+        && player.uid is string
+        && player.name is string
+        && v9ValidTrait(player.cepage)
+        && v9ValidTrait(player.terroir)
+        && v9ValidMode(player.mode)
+        && player.q is number && player.q >= 0
+        && player.a is number && player.a >= 0
+        && player.r is number && player.r >= 0;
+    }
+
+    function v9ValidPlayers(players) {
+      return players is list
+        && players.size() >= 2
+        && players.size() <= 4
+        && v9ValidPublicPlayer(players[0])
+        && v9ValidPublicPlayer(players[1])
+        && players[0].uid != players[1].uid
+        && (players.size() < 3 || (v9ValidPublicPlayer(players[2])
+          && players[2].uid != players[0].uid && players[2].uid != players[1].uid))
+        && (players.size() < 4 || (v9ValidPublicPlayer(players[3])
+          && players[3].uid != players[0].uid && players[3].uid != players[1].uid
+          && players[3].uid != players[2].uid));
+    }
+
+    function v9HasPlayer(players, uid) {
+      return (players.size() > 0 && players[0].uid == uid)
+        || (players.size() > 1 && players[1].uid == uid)
+        || (players.size() > 2 && players[2].uid == uid)
+        || (players.size() > 3 && players[3].uid == uid);
+    }
+
+    function v9AllPlayersReady(roomId, players) {
+      return v9IsReady(roomId, players[0].uid)
+        && v9IsReady(roomId, players[1].uid)
+        && (players.size() < 3 || v9IsReady(roomId, players[2].uid))
+        && (players.size() < 4 || v9IsReady(roomId, players[3].uid));
+    }
+
+    function v9AllPlayersMembers(roomId, players) {
+      return v9IsRoomMember(roomId, players[0].uid)
+        && v9IsRoomMember(roomId, players[1].uid)
+        && (players.size() < 3 || v9IsRoomMember(roomId, players[2].uid))
+        && (players.size() < 4 || v9IsRoomMember(roomId, players[3].uid));
+    }
+
+    function v9ValidMeteo(meteo) {
+      return meteo is map
+        && meteo.keys().hasOnly(['name', 'bonus', 'malus']);
+    }
+
+    function v9ValidEvent(event) {
+      return event is map
+        && event.keys().hasOnly(['name', 'desc', 'effet', 'delta'])
+        && event.delta is map
+        && event.delta.keys().hasOnly(['q', 'a', 'r']);
+    }
+
+    function v9ValidChosen(chosen, players) {
+      return chosen is list
+        && chosen.size() <= players.size()
+        && (chosen.size() < 1 || v9ValidChosenItem(chosen[0], players))
+        && (chosen.size() < 2 || (v9ValidChosenItem(chosen[1], players)
+          && chosen[0].playerUid != chosen[1].playerUid))
+        && (chosen.size() < 3 || (v9ValidChosenItem(chosen[2], players)
+          && chosen[0].playerUid != chosen[2].playerUid
+          && chosen[1].playerUid != chosen[2].playerUid))
+        && (chosen.size() < 4 || (v9ValidChosenItem(chosen[3], players)
+          && chosen[0].playerUid != chosen[3].playerUid
+          && chosen[1].playerUid != chosen[3].playerUid
+          && chosen[2].playerUid != chosen[3].playerUid));
+    }
+
+    function v9ValidChosenItem(item, players) {
+      return item is map
+        && item.keys().hasOnly(['playerUid', 'card'])
+        && item.playerUid is string
+        && v9HasPlayer(players, item.playerUid)
+        && v9ValidTurnCard(item.card);
+    }
+
+    function v9ValidPublicPlayerShape(player) {
+      return player is map
+        && player.keys().hasOnly(['uid', 'name', 'cepage', 'terroir', 'mode', 'q', 'a', 'r'])
+        && player.cepage is map
+        && player.cepage.keys().hasOnly(['name', 'desc', 'bonus', 'malus', 'assoc'])
+        && player.terroir is map
+        && player.terroir.keys().hasOnly(['name', 'desc', 'bonus', 'malus', 'assoc'])
+        && player.mode is map
+        && player.mode.keys().hasOnly(['name', 'bonus', 'malus', 'assoc']);
+    }
+
+    function v9ValidChosenShape(item) {
+      return item is map
+        && item.keys().hasOnly(['playerUid', 'card'])
+        && item.playerUid is string
+        && item.card is map
+        && item.card.keys().hasOnly(['name', 'bonus', 'malus', 'assoc']);
+    }
+
+    function v9ValidGameStateUpdate(data) {
+      return data is map
+        && data.keys().hasOnly([
+          'schemaVersion', 'status', 'revision', 'currentPlayerUid',
+          'players', 'saisonIdx', 'tourInSaison', 'meteo',
+          'evenement', 'allChosen', 'turnStatus', 'updatedAt'
+        ])
+        && data.schemaVersion == 9
+        && data.status in ['playing', 'finished']
+        && data.revision is int && data.revision >= 1
+        && data.players is list
+        && data.players.size() >= 2 && data.players.size() <= 4
+        && v9ValidPublicPlayerShape(data.players[0])
+        && v9ValidPublicPlayerShape(data.players[1])
+        && (data.players.size() < 3 || v9ValidPublicPlayerShape(data.players[2]))
+        && (data.players.size() < 4 || v9ValidPublicPlayerShape(data.players[3]))
+        && data.currentPlayerUid is string
+        && v9HasPlayer(data.players, data.currentPlayerUid)
+        && data.saisonIdx is int && data.saisonIdx >= 0 && data.saisonIdx <= 3
+        && data.tourInSaison is int && data.tourInSaison >= 0 && data.tourInSaison <= 1
+        && (data.meteo == null || v9ValidMeteo(data.meteo))
+        && (data.evenement == null || v9ValidEvent(data.evenement))
+        && data.allChosen is list && data.allChosen.size() <= data.players.size()
+        && (data.allChosen.size() < 1 || v9ValidChosenShape(data.allChosen[0]))
+        && (data.allChosen.size() < 2 || v9ValidChosenShape(data.allChosen[1]))
+        && (data.allChosen.size() < 3 || v9ValidChosenShape(data.allChosen[2]))
+        && (data.allChosen.size() < 4 || v9ValidChosenShape(data.allChosen[3]))
+        && data.turnStatus == 'choosing'
+        && data.updatedAt is timestamp;
+    }
+
+    function v9ValidGameState(data) {
+      return data is map
+        && data.keys().hasOnly([
+          'schemaVersion', 'status', 'revision', 'currentPlayerUid',
+          'players', 'saisonIdx', 'tourInSaison', 'meteo',
+          'evenement', 'allChosen', 'turnStatus', 'updatedAt'
+        ])
+        && data.schemaVersion == 9
+        && data.status in ['playing', 'finished']
+        && data.revision is int && data.revision >= 1
+        && v9ValidPlayers(data.players)
+        && data.currentPlayerUid is string
+        && v9HasPlayer(data.players, data.currentPlayerUid)
+        && data.saisonIdx is int && data.saisonIdx >= 0 && data.saisonIdx <= 3
+        && data.tourInSaison is int && data.tourInSaison >= 0 && data.tourInSaison <= 1
+        && (data.meteo == null || v9ValidMeteo(data.meteo))
+        && (data.evenement == null || v9ValidEvent(data.evenement))
+        && v9ValidChosen(data.allChosen, data.players)
+        && data.turnStatus == 'choosing'
+        && data.updatedAt is timestamp;
+    }
+
+    function v9ValidSetupProfile(data, uid) {
+      return data is map
+        && data.keys().hasOnly([
+          'uid', 'name', 'cepage', 'terroir', 'mode',
+          'q', 'a', 'r', 'ready', 'updatedAt'
+        ])
+        && data.keys().hasAll([
+          'uid', 'name', 'cepage', 'terroir', 'mode',
+          'q', 'a', 'r', 'ready', 'updatedAt'
+        ])
+        && data.uid == uid
+        && data.name is string && data.name.size() <= 24
+        && v9ValidTrait(data.cepage)
+        && v9ValidTrait(data.terroir)
+        && v9ValidMode(data.mode)
+        && data.q is number && data.q >= 0
+        && data.a is number && data.a >= 0
+        && data.r is number && data.r >= 0
+        && data.ready == true
+        && data.updatedAt is timestamp;
+    }
+
+    // Minimal V8 salon rules used only by the local emulator end-to-end tests.
+    // Do not copy this fixture over the active V8 room/member rules.
+    match /rooms/{roomId} {
+      allow read: if v9SignedIn();
+      allow create: if v9SignedIn()
+        && request.resource.data.keys().hasOnly(['code', 'hostUid', 'status', 'maxPlayers', 'createdAt', 'version'])
+        && request.resource.data.code == roomId
+        && request.resource.data.hostUid == request.auth.uid
+        && request.resource.data.status == 'waiting'
+        && request.resource.data.maxPlayers == 4
+        && request.resource.data.createdAt is timestamp;
+      allow delete: if v9SignedIn()
+        && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostUid == request.auth.uid;
+
+      match /members/{memberUid} {
+        allow read: if v9SignedIn();
+        allow create: if v9SignedIn()
+          && request.auth.uid == memberUid
+          && exists(/databases/$(database)/documents/rooms/$(roomId))
+          && get(/databases/$(database)/documents/rooms/$(roomId)).data.status == 'waiting'
+          && request.resource.data.keys().hasOnly(['uid', 'name', 'role', 'joinedAt'])
+          && request.resource.data.uid == memberUid
+          && request.resource.data.name is string
+          && request.resource.data.role in ['host', 'player']
+          && request.resource.data.joinedAt is timestamp
+          && ((request.resource.data.role == 'host'
+            && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostUid == memberUid)
+            || (request.resource.data.role == 'player'
+              && get(/databases/$(database)/documents/rooms/$(roomId)).data.hostUid != memberUid));
+        allow delete: if v9SignedIn()
+          && (request.auth.uid == memberUid
+            || get(/databases/$(database)/documents/rooms/$(roomId)).data.hostUid == request.auth.uid);
+      }
+    }
+
+    match /rooms/{roomId}/game/state {
+      allow read: if v9IsMember(roomId);
+      allow create: if v9IsHost(roomId)
+        && v9ValidGameState(request.resource.data)
+        && request.resource.data.status == 'playing'
+        && request.resource.data.revision == 1
+        && v9AllPlayersMembers(roomId, request.resource.data.players)
+        && v9AllPlayersReady(roomId, request.resource.data.players);
+      allow update: if v9IsMember(roomId)
+        && resource.data.status == 'playing'
+        && resource.data.currentPlayerUid == request.auth.uid
+        && v9ValidGameStateUpdate(request.resource.data)
+        && request.resource.data.revision == resource.data.revision + 1
+        && request.resource.data.players.size() == resource.data.players.size()
+        && request.resource.data.players[0].uid == resource.data.players[0].uid
+        && request.resource.data.players[1].uid == resource.data.players[1].uid
+        && (resource.data.players.size() < 3 || request.resource.data.players[2].uid == resource.data.players[2].uid)
+        && (resource.data.players.size() < 4 || request.resource.data.players[3].uid == resource.data.players[3].uid);
+      allow delete: if false;
+    }
+
+    match /rooms/{roomId}/game/players/items/{playerUid} {
+      allow read: if v9IsMember(roomId);
+      allow create, update: if v9IsMember(roomId)
+        && request.auth.uid == playerUid
+        && v9ValidSetupProfile(request.resource.data, playerUid)
+        && v9HasPrivateSetup(roomId, playerUid)
+        && !exists(/databases/$(database)/documents/rooms/$(roomId)/game/state);
+      allow delete: if false;
+    }
+
+    match /rooms/{roomId}/private/{playerUid} {
+      allow read: if v9IsMember(roomId) && request.auth.uid == playerUid;
+      allow create: if v9IsMember(roomId)
+        && request.auth.uid == playerUid
+        && !exists(/databases/$(database)/documents/rooms/$(roomId)/game/state)
+        && v9ValidPrivateData(request.resource.data, playerUid);
+      allow update: if v9IsMember(roomId)
+        && request.auth.uid == playerUid
+        && v9ValidPrivateData(request.resource.data, playerUid)
+        && (!exists(/databases/$(database)/documents/rooms/$(roomId)/game/state)
+          || (get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.status == 'playing'
+            && get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.currentPlayerUid == request.auth.uid));
+      allow delete: if false;
+    }
+
+    match /rooms/{roomId}/actions/{actionId} {
+      allow read: if v9IsMember(roomId);
+      allow create: if v9IsMember(roomId)
+        && request.resource.data.keys().hasOnly(['by', 'type', 'summary', 'createdAt'])
+        && request.resource.data.keys().hasAll(['by', 'type', 'summary', 'createdAt'])
+        && request.resource.data.by == request.auth.uid
+        && exists(/databases/$(database)/documents/rooms/$(roomId)/game/state)
+        && get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.status == 'playing'
+        && get(/databases/$(database)/documents/rooms/$(roomId)/game/state).data.currentPlayerUid == request.auth.uid
+        && request.resource.data.type is string
+        && request.resource.data.type.size() <= 40
+        && request.resource.data.summary is string
+        && request.resource.data.summary.size() <= 160
+        && request.resource.data.createdAt is timestamp;
+      allow update, delete: if false;
+    }
+  }
+}

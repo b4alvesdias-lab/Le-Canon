@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f0720">
+<title>Le Canon V9 — Multijoueur 🍇</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0f0720;--card:#1e1035;--card2:#2a1848;
+  --gold:#d4a843;--gold2:#f0c96a;
+  --wine:#c0294f;--green:#52b788;--blue:#4a90d9;--red:#e76f51;
+  --orange:#ff9800;--purple:#ab47bc;
+  --text:#f0e8d8;--muted:#9988aa;
+}
+body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;}
+.page{display:none;padding:20px 16px 80px;min-height:100vh;}
+.page.on{display:block;animation:up .3s ease;}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+h1{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:900;
+   background:linear-gradient(135deg,var(--gold),var(--gold2),var(--wine));
+   -webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;}
+h2{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold2);margin:20px 0 12px;}
+h3{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--gold2);margin-bottom:8px;}
+p{font-size:.88rem;color:var(--muted);line-height:1.5;}
+.lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
+
+.btn{display:block;width:100%;padding:15px;border:none;border-radius:14px;
+     font-family:'Lato',sans-serif;font-size:.95rem;font-weight:700;
+     text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;margin-top:10px;transition:.15s;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a0a2e;box-shadow:0 4px 20px rgba(212,168,67,.35);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,.12);}
+.btn-red{background:linear-gradient(135deg,#7f0000,var(--red));color:#fff;}
+.btn:active{opacity:.8;transform:scale(.97);}
+
+input[type=text]{width:100%;padding:13px 15px;background:var(--card);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;color:var(--text);font-size:1rem;font-family:'Lato',sans-serif;outline:none;margin-bottom:10px;}
+input[type=text]:focus{border-color:var(--gold);}
+
+/* CARDS */
+.card{background:var(--card);border-radius:16px;padding:18px;border:1px solid rgba(255,255,255,.07);
+      margin-bottom:12px;position:relative;overflow:hidden;}
+.card-top{height:3px;position:absolute;top:0;left:0;right:0;border-radius:3px 3px 0 0;}
+.card .cname{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold2);margin:6px 0 12px;}
+.crow{display:flex;gap:8px;margin-bottom:7px;align-items:flex-start;font-size:.84rem;}
+.crow .ico{flex-shrink:0;}
+.crow .rlbl{font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.8px;}
+.crow .rval{color:var(--muted);line-height:1.4;}
+.lg{color:var(--green)}.lr{color:var(--red)}.lb{color:var(--blue)}
+.lo{color:var(--orange)}.lp{color:var(--purple)}
+
+.tc  .card-top{background:linear-gradient(90deg,#38006B,#9C27B0);}
+.ttr .card-top{background:linear-gradient(90deg,#003300,#388E3C);}
+.tmo .card-top{background:linear-gradient(90deg,#BF360C,#FF7043);}
+.th  .card-top{background:linear-gradient(90deg,#0D47A1,#90CAF9);}
+.tpr .card-top{background:linear-gradient(90deg,#1B5E20,#A5D6A7);}
+.te  .card-top{background:linear-gradient(90deg,#F57F17,#FFD54F);}
+.tau .card-top{background:linear-gradient(90deg,#BF360C,#FFAB76);}
+.tcm .card-top{background:linear-gradient(90deg,#00695C,#4DB6AC);} /* coup de main bonus */
+.tcmm .card-top{background:linear-gradient(90deg,#4A148C,#CE93D8);} /* coup de main malus */
+.tmat .card-top{background:linear-gradient(90deg,#E65100,#FFB74D);} /* matériel bonus */
+.tmatm .card-top{background:linear-gradient(90deg,#B71C1C,#EF9A9A);} /* matériel malus */
+
+.pick{cursor:pointer;border:2px solid rgba(255,255,255,.07);}
+.pick.sel{border-color:var(--gold);background:rgba(212,168,67,.06);box-shadow:0 0 20px rgba(212,168,67,.25);}
+.pick.sel::after{content:'✓';position:absolute;top:12px;right:14px;color:var(--gold);font-size:1.1rem;font-weight:700;}
+
+.prog{height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-bottom:18px;}
+.prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--wine),var(--gold));transition:width .5s;}
+
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;}
+.tab{flex-shrink:0;padding:9px 16px;border-radius:30px;border:1px solid rgba(255,255,255,.1);
+     background:var(--card);color:var(--muted);font-size:.83rem;font-weight:700;cursor:pointer;}
+.tab.on{background:var(--gold);color:#1a0a2e;border-color:var(--gold);}
+
+.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0;}
+.sbox{background:var(--card);border-radius:12px;padding:10px 6px;text-align:center;border:1px solid rgba(255,255,255,.07);}
+.sbox .sico{font-size:1.1rem;}
+.sbox .slbl{font-size:.6rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:3px 0 5px;}
+.sbox .sval{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--gold2);}
+.sbox .ctrl{display:flex;gap:4px;justify-content:center;margin-top:5px;}
+.sbtn{width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;font-size:.95rem;font-weight:700;
+      display:flex;align-items:center;justify-content:center;}
+.sbtn:active{transform:scale(.88);}
+.sm{background:rgba(231,111,81,.2);color:var(--red);}
+.sp{background:rgba(82,183,136,.2);color:var(--green);}
+
+.meteo-banner{border-radius:16px;padding:16px 18px;margin-bottom:16px;border:1px solid rgba(255,255,255,.15);}
+.meteo-banner .mname{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;}
+.meteo-banner .mdet{font-size:.8rem;margin-top:4px;line-height:1.4;opacity:.85;}
+.hiver-bg{background:linear-gradient(135deg,#0D47A1,#1565C0);}
+.printemps-bg{background:linear-gradient(135deg,#1B5E20,#2E7D32);}
+.ete-bg{background:linear-gradient(135deg,#E65100,#F57F17);}
+.automne-bg{background:linear-gradient(135deg,#4A148C,#6A1B9A);}
+
+.saison-header{border-radius:14px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.saison-header .snom{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;}
+.saison-header .stour{font-size:.72rem;text-transform:uppercase;letter-spacing:1.5px;opacity:.8;}
+
+.mcard{background:var(--card);border-radius:14px;padding:16px;border:2px solid rgba(255,255,255,.07);cursor:pointer;margin-bottom:10px;}
+.mcard.sel{border-color:var(--gold);background:rgba(212,168,67,.05);}
+.mcard-title{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--gold2);margin-bottom:6px;}
+.mcard-body{font-size:.81rem;color:var(--muted);line-height:1.5;}
+
+/* HAND — cartes en main */
+.hand-section{border-radius:14px;padding:14px 16px;margin-bottom:12px;border:1px solid rgba(255,255,255,.1);}
+.hand-section.cdm{background:rgba(0,105,92,.1);border-color:rgba(77,182,172,.3);}
+.hand-section.mat{background:rgba(230,81,0,.08);border-color:rgba(255,183,77,.3);}
+.hand-title{font-size:.72rem;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:10px;}
+.hand-title.cdm-t{color:#4DB6AC;}
+.hand-title.mat-t{color:#FFB74D;}
+.hand-cards{display:flex;flex-direction:column;gap:8px;}
+.hand-card{border-radius:12px;padding:12px 14px;cursor:pointer;border:2px solid transparent;transition:.2s;position:relative;}
+.hand-card.cdm-b{background:rgba(0,105,92,.2);border-color:rgba(77,182,172,.2);}
+.hand-card.cdm-ml{background:rgba(74,20,140,.2);border-color:rgba(206,147,216,.2);}
+.hand-card.mat-b{background:rgba(230,81,0,.15);border-color:rgba(255,183,77,.2);}
+.hand-card.mat-ml{background:rgba(183,28,28,.2);border-color:rgba(239,154,154,.2);}
+.hand-card.played{opacity:.4;pointer-events:none;}
+.hand-card.played::after{content:'Jouée';position:absolute;top:8px;right:10px;font-size:.65rem;color:var(--muted);font-weight:700;}
+.hand-card-name{font-weight:700;font-size:.88rem;margin-bottom:4px;}
+.hand-card-eff{font-size:.78rem;color:var(--muted);line-height:1.4;}
+.hand-card.sel-hand{border-color:var(--gold)!important;background:rgba(212,168,67,.08)!important;}
+
+/* target selector */
+.target-sel{background:var(--card2);border-radius:12px;padding:14px;margin-top:8px;border:1px solid rgba(212,168,67,.3);}
+.target-sel p{color:var(--gold2);font-size:.85rem;margin-bottom:10px;font-weight:700;}
+.target-btns{display:flex;flex-wrap:wrap;gap:8px;}
+.tbtn{padding:8px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.15);
+      background:var(--card);color:var(--text);font-size:.82rem;font-weight:700;cursor:pointer;}
+.tbtn:active{background:var(--gold);color:#1a0a2e;}
+
+/* badge */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:700;margin-left:6px;vertical-align:middle;}
+.badge-b{background:rgba(82,183,136,.2);color:var(--green);}
+.badge-m{background:rgba(231,111,81,.2);color:var(--red);}
+
+.pod{background:var(--card);border-radius:14px;padding:15px 18px;display:flex;align-items:center;gap:12px;
+     margin-bottom:10px;border:1px solid rgba(255,255,255,.07);}
+.pod.p1{border-color:var(--gold);background:rgba(212,168,67,.07);}
+.prk{font-family:'Playfair Display',serif;font-size:1.7rem;width:34px;color:var(--muted);}
+.p1 .prk{color:var(--gold);}
+.pnm{flex:1;font-weight:700;}
+.psb{font-size:.73rem;color:var(--muted);}
+.ptot{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold2);}
+
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);
+       background:var(--green);color:#fff;padding:10px 22px;border-radius:30px;
+       font-weight:700;font-size:.88rem;opacity:0;transition:all .3s;z-index:999;white-space:nowrap;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.warn{background:var(--red);}
+/* auto-score recap */
+.auto-score{background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.2);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+.auto-score-title{font-size:.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);margin-bottom:8px;font-weight:700;}
+.auto-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.82rem;}
+.auto-row:last-child{border-bottom:none;}
+.auto-row .aval{font-weight:700;color:var(--gold2);}
+.auto-row .aval.pos{color:var(--green);}
+.auto-row .aval.neg{color:var(--red);}
+/* total bar */
+.total-bar{background:var(--card2);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+.total-bar .tlbl{font-size:.8rem;color:var(--muted);}
+.total-bar .tval{font-family:"Playfair Display",serif;font-size:1.4rem;color:var(--gold2);}
+/* profile modal */
+.profile-section{margin-bottom:16px;}
+.profile-section-title{font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:var(--gold);margin-bottom:8px;font-weight:700;}
+.profile-card{background:var(--card2);border-radius:12px;padding:12px 14px;margin-bottom:8px;}
+.profile-card-name{font-family:"Playfair Display",serif;font-size:1rem;color:var(--gold2);margin-bottom:6px;}
+.profile-card-eff{font-size:.78rem;color:var(--muted);line-height:1.4;}
+.played-tag{font-size:.65rem;color:var(--red);font-weight:700;margin-left:6px;}
+
+
+hr{border:none;border-top:1px solid rgba(255,255,255,.07);margin:14px 0;}
+.center{text-align:center;}
+.grape{font-size:3rem;display:block;text-align:center;margin-bottom:8px;}
+.mt{margin-top:12px;}
+
+/* modal overlay */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.overlay.on{display:flex;}
+.modal{background:#1a0a2e;border-radius:24px 24px 0 0;padding:24px 20px 50px;width:100%;max-height:80vh;overflow-y:auto;border-top:1px solid rgba(255,255,255,.1);animation:sup .3s ease;}
+@keyframes sup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:40px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin:0 auto 18px;}
+.diff-btn.sel{background:rgba(212,168,67,.15);border-color:var(--gold);color:var(--gold2);}
+.ai-banner{background:linear-gradient(135deg,#1a0050,#2d0080);border:1px solid rgba(171,71,188,.4);
+           border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+.ai-avatar{font-size:2rem;flex-shrink:0;}
+.ai-info{flex:1;}
+.ai-name{font-family:"Playfair Display",serif;font-size:1rem;color:#CE93D8;font-weight:700;}
+.ai-diff{font-size:.72rem;color:var(--muted);margin-top:2px;}
+.ai-thinking{background:rgba(171,71,188,.1);border-radius:10px;padding:10px 14px;margin-bottom:12px;
+             font-size:.82rem;color:#CE93D8;font-style:italic;border:1px solid rgba(171,71,188,.2);}
+
+.online-member{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07);}
+.online-member:last-child{border-bottom:none;}
+.online-dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.online-code-note{font-size:.72rem;color:var(--muted);margin-top:8px;}
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 : ACCUEIL -->
+<div class="page on" id="p-home">
+  <br>
+  <span class="grape">🍇</span>
+  <h1>Le Canon</h1>
+  <p class="center" style="margin:6px 0 4px;">Jeu de cartes viticole</p>
+  <p class="center" style="margin-bottom:8px;font-size:.8rem;">Région d'Arbois • Jura</p><p class="center" style="margin-bottom:24px;font-size:.7rem;color:var(--gold);">VERSION 9 — MULTIJOUEUR (TEST)</p>
+
+  <h2>Mode de jeu</h2>
+  <div style="display:flex;gap:10px;margin-bottom:20px;">
+    <button class="btn btn-ghost" id="mode-solo"  onclick="selectMode('solo')"  style="flex:1;">🤖 Solo vs Ordi</button>
+    <button class="btn btn-ghost" id="mode-multi" onclick="selectMode('multi')" style="flex:1;">👥 Local</button>
+    <button class="btn btn-ghost" id="mode-online" onclick="selectMode('online')" style="flex:1;">🌐 En ligne</button>
+  </div>
+
+  <div id="solo-fields" style="display:none;">
+    <h2>Ton prénom</h2>
+    <input type="text" id="solo-name" placeholder="Ex: Marie">
+    <h2 style="margin-top:16px;">Difficulté 🏚️ La Cave Coopérative</h2>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+      <button class="btn btn-ghost diff-btn" id="diff-easy"   onclick="setDiff('easy')"  >🌱 Facile — joue au hasard</button>
+      <button class="btn btn-ghost diff-btn" id="diff-normal" onclick="setDiff('normal')">🍷 Normal — optimise la qualité</button>
+      <button class="btn btn-ghost diff-btn" id="diff-hard"   onclick="setDiff('hard')"  >💀 Difficile — stratégique et te sabote</button>
+    </div>
+    <button class="btn btn-gold" onclick="goSolo()">Jouer contre La Cave →</button>
+  </div>
+
+
+  <div id="online-fields" style="display:none;">
+    <h2>🌐 Jouer à distance</h2>
+    <p style="margin-bottom:12px;">Crée un salon et partage son code avec tes amis. Jusqu'à 4 joueurs peuvent le rejoindre.</p>
+    <input type="text" id="online-name" maxlength="18" placeholder="Ton prénom / pseudo">
+    <button class="btn btn-gold" onclick="createOnlineRoom()">Créer un salon</button>
+    <hr>
+    <h3>Rejoindre un salon</h3>
+    <input type="text" id="online-code" maxlength="6" placeholder="Code à 6 caractères" style="text-transform:uppercase;text-align:center;letter-spacing:4px;">
+    <button class="btn btn-ghost" onclick="joinOnlineRoom()">Rejoindre avec un code</button>
+    <p id="online-status" style="margin-top:12px;"></p>
+  </div>
+
+  <div id="multi-fields" style="display:none;">
+    <h2>Combien de joueurs ?</h2>
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+      <button class="btn btn-ghost" id="nb2" onclick="setNb(2)" style="flex:1;">2</button>
+      <button class="btn btn-ghost" id="nb3" onclick="setNb(3)" style="flex:1;">3</button>
+      <button class="btn btn-ghost" id="nb4" onclick="setNb(4)" style="flex:1;">4</button>
+    </div>
+    <div id="name-fields" style="display:none;">
+      <h2>Noms des joueurs</h2>
+      <div id="name-inputs"></div>
+      <button class="btn btn-gold" onclick="goSetup()">Distribuer les cartes →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- PAGE SALON EN LIGNE -->
+<div class="page" id="p-online-lobby">
+  <span class="grape">🍇</span>
+  <h1 style="font-size:2rem;">Salon en ligne</h1>
+  <p class="center" style="margin:8px 0 18px;">Partage ce code avec les autres joueurs.</p>
+  <div class="card center" style="border-color:var(--gold);">
+    <div class="lbl">CODE DU SALON</div>
+    <div id="online-room-code" style="font-family:'Playfair Display',serif;font-size:2.5rem;letter-spacing:6px;color:var(--gold2);margin:10px 0;">------</div>
+    <button class="btn btn-gold" onclick="copyRoomCode()">Copier le code</button>
+  </div>
+  <h2>Joueurs connectés</h2>
+  <div id="online-members" class="card"><p>Connexion au salon…</p></div>
+  <div id="online-room-message" class="card" style="border-color:rgba(212,168,67,.35);">
+    <p>Le salon est en ligne. La connexion et la liste des joueurs sont synchronisées en temps réel.</p>
+  </div>
+  <button class="btn btn-ghost" onclick="leaveOnlineRoom()">Quitter le salon</button>
+</div>
+
+<!-- PAGE 2 : SETUP -->
+<div class="page" id="p-setup">
+  <h2>🎴 Cartes de départ</h2>
+  <p style="margin-bottom:14px;">Chaque joueur reçoit un cépage, un terroir, 3 cartes Coup de Main et 3 cartes Matériel au hasard. Chaque carte spéciale ne peut être jouée qu'une seule fois par partie.</p>
+  <div class="tabs" id="setup-tabs"></div>
+  <div id="setup-body"></div>
+  <button class="btn btn-gold" style="margin-top:20px;" onclick="checkSetup()">Commencer la partie →</button>
+</div>
+
+<!-- PAGE 3 : JEU -->
+<div class="page" id="p-game">
+  <div class="prog"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+  <div id="g-saison-header"></div>
+  <div id="g-meteo"></div>
+  <div class="tabs" id="game-tabs"></div>
+  <div id="g-body"></div>
+  <div id="g-hand"></div>
+  <div id="g-actions" style="margin-top:14px;"></div>
+</div>
+
+<!-- PAGE 4 : SCORES -->
+<div class="page" id="p-scores">
+  <h2>📊 Scores — <span id="sc-label">—</span></h2>
+  <p style="margin-bottom:14px;">Note les points gagnés ce tour pour chaque joueur.</p>
+  <div id="sc-body"></div>
+  <button class="btn btn-gold" style="margin-top:18px;" id="sc-btn" onclick="nextTour()">Suivant →</button>
+</div>
+
+<!-- PAGE 5 : FIN -->
+<div class="page" id="p-end">
+  <br><span class="grape">🏆</span>
+  <h1 style="font-size:2rem;">Résultats</h1>
+  <h2>Classement final</h2>
+  <div id="end-podium"></div>
+  <h2>Détail</h2>
+  <div id="end-detail"></div>
+  <button class="btn btn-gold" style="margin-top:20px;" onclick="newGame()">🍇 Nouvelle partie</button>
+</div>
+
+<!-- MODAL : fiche joueur -->
+<div class="overlay" id="modal-profile" onclick="closeProfileOutside(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="modal-profile-content"></div>
+    <button class="btn btn-ghost" style="margin-top:10px;" onclick="closeProfile()">Fermer</button>
+  </div>
+</div>
+
+<!-- MODAL : jouer une carte spéciale -->
+<div class="overlay" id="modal-special" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="modal-content"></div>
+    <button class="btn btn-ghost" style="margin-top:10px;" onclick="closeModal()">Annuler</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+<!-- Firebase V9 : authentification anonyme + Cloud Firestore -->
+<script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ════════════════════════════
+// DATA
+// ════════════════════════════
+
+const CEPAGES = [
+  { name:"Savagnin",   desc:"Cépage roi d'Arbois, donne le fameux Vin Jaune.",
+    bonus:"+4 qualité, +2 arômes", malus:"-3 rendement, -1 arôme si gel",
+    assoc:"Vinification en fût de chêne → +3 qualité" },
+  { name:"Chardonnay", desc:"Cépage blanc élégant, très présent dans le Jura.",
+    bonus:"+3 qualité, +1 arôme",  malus:"-2 rendement",
+    assoc:"Vendange tardive → +2 qualité" },
+  { name:"Poulsard",   desc:"Cépage rouge léger typique d'Arbois, peau fine.",
+    bonus:"+2 rendement, +2 arômes", malus:"-1 qualité si canicule ou grêle",
+    assoc:"Macération courte → +3 arômes" },
+  { name:"Trousseau",  desc:"Cépage rouge rustique et tannique du Jura.",
+    bonus:"+3 rendement, +1 qualité", malus:"-1 qualité, fragile au gel",
+    assoc:"Sol argileux → +2 qualité" },
+  { name:"Pinot Noir", desc:"Cépage noble introduit dans le Jura, belle finesse.",
+    bonus:"+2 qualité, +2 arômes",  malus:"-2 rendement",
+    assoc:"Vendange manuelle → +2 qualité" },
+  { name:"Pinot Gris", desc:"Cépage blanc aux arômes riches, rare dans le Jura.",
+    bonus:"+2 qualité, +3 rendement", malus:"-1 arôme, -1 qualité si pluie abondante",
+    assoc:"Vinification moderne → +2 arômes" },
+];
+
+const TERROIRS = [
+  { name:"Sol Marneux Bleu",       desc:"Marnes bleues du Lias, signature du terroir d'Arbois.",
+    bonus:"+4 qualité, +1 arôme",      malus:"-2 rendement",                    assoc:"Savagnin → +2 qualité bonus" },
+  { name:"Sol Calcaire Dur",       desc:"Calcaires jurassiques, minéralité et tension.",
+    bonus:"+3 qualité, +1 arôme",      malus:"-1 rendement",                    assoc:"Pluie modérée → annule le malus" },
+  { name:"Sol Argileux Rouge",     desc:"Argiles rouges triasiques, richesse et structure.",
+    bonus:"+3 rendement, +1 qualité",  malus:"-2 qualité si pluie abondante",   assoc:"Trousseau ou Poulsard → +2 qualité" },
+  { name:"Sol Marneux Gris",       desc:"Marnes grises du Trias, minéralité discrète.",
+    bonus:"+2 qualité, +2 rendement",  malus:"-1 qualité si canicule",          assoc:"Chardonnay → +1 qualité, +1 arôme" },
+  { name:"Sol Argilo-Calcaire",    desc:"Mélange équilibré, polyvalent et régulier.",
+    bonus:"+2 qualité, +2 rendement",  malus:"-1 rendement si gel printanier",  assoc:"Pinot Noir → +2 arômes" },
+  { name:"Sol Rocheux Triasique",  desc:"Grès et roches du Trias, vins de caractère.",
+    bonus:"+3 qualité, +2 arômes",     malus:"-3 rendement",                    assoc:"Savagnin → +3 qualité, Vin Jaune !" },
+];
+
+const MODES = [
+  { name:"🌿 Conventionnel", bonus:"Passif : +1 rendement à chaque tour",   malus:"Passif : -1 qualité aux tours 7 & 8",      assoc:"Amplifie les cartes Traitements de +1 rendement" },
+  { name:"🌱 Biologique",    bonus:"Passif : +1 qualité à chaque tour",     malus:"Passif : -1 rendement à chaque tour",      assoc:"Amplifie Traitements biologiques de +1 qualité" },
+  { name:"🌍 Biodynamique",  bonus:"Passif : +1 arôme à chaque tour",       malus:"Passif : -1 qualité et -1 rendement au T5", assoc:"Amplifie Soins préventifs et Vendange tardive de +1" },
+];
+
+// ── COUP DE MAIN ──
+const CDM_BONUS = [
+  { name:"🤝 Vendange collective",      type:"cdm-b",
+    effet:"Donne +2 rendement à un joueur de ton choix. Tu gagnes +1 rendement.",
+    appliquer:(src,tgt)=>{ tgt.r+=2; src.r+=1; return `+2 rendement pour ${tgt.name}, +1 pour ${src.name}`; } },
+  { name:"🌿 Échange de savoir-faire",  type:"cdm-b",
+    effet:"Toi et un joueur de ton choix gagnez chacun +1 qualité et +1 arôme.",
+    appliquer:(src,tgt)=>{ src.q+=1; src.a+=1; tgt.q+=1; tgt.a+=1; return `+1 qualité +1 arôme pour ${src.name} et ${tgt.name}`; } },
+  { name:"🍷 Dégustation entre vignerons", type:"cdm-b",
+    effet:"Toi et un joueur de ton choix gagnez chacun +2 arômes.",
+    appliquer:(src,tgt)=>{ src.a+=2; tgt.a+=2; return `+2 arômes pour ${src.name} et ${tgt.name}`; } },
+  { name:"🏚️ Journée au chai ensemble", type:"cdm-b",
+    effet:"Un joueur de ton choix gagne +2 qualité. Tu gagnes +1 qualité mais -1 rendement.",
+    appliquer:(src,tgt)=>{ tgt.q+=2; src.q+=1; src.r=Math.max(0,src.r-1); return `+2 qualité pour ${tgt.name}, +1 qualité -1 rendement pour ${src.name}`; } },
+];
+
+const CDM_MALUS = [
+  { name:"😬 Conseil mal avisé",    type:"cdm-ml",
+    effet:"Un joueur de ton choix perd -2 qualité ce tour. Peut aussi être joué sur toi-même.",
+    appliquer:(src,tgt)=>{ tgt.q=Math.max(0,tgt.q-2); return `-2 qualité pour ${tgt.name}`; } },
+  { name:"⏰ Coup de main tardif",   type:"cdm-ml",
+    effet:"Toi et un joueur de ton choix perdez -1 rendement.",
+    appliquer:(src,tgt)=>{ src.r=Math.max(0,src.r-1); tgt.r=Math.max(0,tgt.r-1); return `-1 rendement pour ${src.name} et ${tgt.name}`; } },
+  { name:"💥 Mauvaise manipulation", type:"cdm-ml",
+    effet:"Un joueur de ton choix perd -2 arômes et -1 qualité.",
+    appliquer:(src,tgt)=>{ tgt.a=Math.max(0,tgt.a-2); tgt.q=Math.max(0,tgt.q-1); return `-2 arômes -1 qualité pour ${tgt.name}`; } },
+  { name:"🤦 Faux conseil d'expert", type:"cdm-ml",
+    effet:"Un joueur de ton choix perd -3 qualité. Attention : il peut refuser et tu perds -1 arôme à la place !",
+    appliquer:(src,tgt,refused)=>{ if(refused){src.a=Math.max(0,src.a-1);return `-1 arôme pour ${src.name} (refus)`;}tgt.q=Math.max(0,tgt.q-3);return `-3 qualité pour ${tgt.name}`; } },
+  { name:"😤 Rivalité de voisinage", type:"cdm-ml",
+    effet:"Un joueur de ton choix perd -1 qualité, -1 arôme et -1 rendement.",
+    appliquer:(src,tgt)=>{ tgt.q=Math.max(0,tgt.q-1); tgt.a=Math.max(0,tgt.a-1); tgt.r=Math.max(0,tgt.r-1); return `-1 qualité -1 arôme -1 rendement pour ${tgt.name}`; } },
+];
+
+// ── MATÉRIEL ──
+const MAT_BONUS = [
+  { name:"🪣 Foudre en chêne",        type:"mat-b",
+    effet:"Ce tour : +3 arômes, +2 qualité / -2 rendement. Utilisable en automne de préférence.",
+    appliquer:(src)=>{ src.a+=3; src.q+=2; src.r=Math.max(0,src.r-2); return `+3 arômes +2 qualité -2 rendement pour ${src.name}`; } },
+  { name:"🌡️ Cuve thermo-régulée",    type:"mat-b",
+    effet:"Ce tour : +2 qualité, +1 arôme / -1 rendement.",
+    appliquer:(src)=>{ src.q+=2; src.a+=1; src.r=Math.max(0,src.r-1); return `+2 qualité +1 arôme -1 rendement pour ${src.name}`; } },
+  { name:"🪤 Filets anti-grêle",       type:"mat-b",
+    effet:"Annule le malus de la carte Grêle ce tour. Sinon : +1 rendement.",
+    appliquer:(src,_,meteoName)=>{ src.r+=1; return `+1 rendement (ou annulation grêle) pour ${src.name}`; } },
+  { name:"🐴 Cheval de labour",        type:"mat-b",
+    effet:"Ce tour : +2 qualité, +1 arôme / -2 rendement (travail du sol en douceur).",
+    appliquer:(src)=>{ src.q+=2; src.a+=1; src.r=Math.max(0,src.r-2); return `+2 qualité +1 arôme -2 rendement pour ${src.name}`; } },
+  { name:"🌬️ Éolienne anti-gel",       type:"mat-b",
+    effet:"Réduit le malus de gel de moitié ce tour. Sinon : +1 qualité.",
+    appliquer:(src)=>{ src.q+=1; return `+1 qualité (ou protection gel) pour ${src.name}`; } },
+];
+
+const MAT_MALUS = [
+  { name:"🚜 Tracteur en panne",       type:"mat-ml",
+    effet:"Un joueur de ton choix perd -2 rendement et -1 action ce tour.",
+    appliquer:(src,tgt)=>{ tgt.r=Math.max(0,tgt.r-2); tgt.q=Math.max(0,tgt.q-1); return `-2 rendement -1 qualité pour ${tgt.name}`; } },
+  { name:"🛢️ Fût défectueux",          type:"mat-ml",
+    effet:"Un joueur de ton choix perd -2 arômes et -1 qualité (contamination).",
+    appliquer:(src,tgt)=>{ tgt.a=Math.max(0,tgt.a-2); tgt.q=Math.max(0,tgt.q-1); return `-2 arômes -1 qualité pour ${tgt.name}`; } },
+  { name:"🔒 Pressoir bloqué",         type:"mat-ml",
+    effet:"Un joueur de ton choix perd -3 rendement (vendange retardée).",
+    appliquer:(src,tgt)=>{ tgt.r=Math.max(0,tgt.r-3); return `-3 rendement pour ${tgt.name}`; } },
+  { name:"🌊 Cave inondée",            type:"mat-ml",
+    effet:"Un joueur de ton choix perd -2 qualité, -2 arômes et -1 rendement. Catastrophe !",
+    appliquer:(src,tgt)=>{ tgt.q=Math.max(0,tgt.q-2); tgt.a=Math.max(0,tgt.a-2); tgt.r=Math.max(0,tgt.r-1); return `-2 qualité -2 arômes -1 rendement pour ${tgt.name}`; } },
+  { name:"⚡ Court-circuit en cave",   type:"mat-ml",
+    effet:"Un joueur de ton choix perd -1 qualité, -1 arôme et -2 rendement.",
+    appliquer:(src,tgt)=>{ tgt.q=Math.max(0,tgt.q-1); tgt.a=Math.max(0,tgt.a-1); tgt.r=Math.max(0,tgt.r-2); return `-1 qualité -1 arôme -2 rendement pour ${tgt.name}`; } },
+  { name:"🦠 Contamination de cuve",   type:"mat-ml",
+    effet:"Un joueur de ton choix perd -3 arômes (oxydation du vin en cours).",
+    appliquer:(src,tgt)=>{ tgt.a=Math.max(0,tgt.a-3); return `-3 arômes pour ${tgt.name}`; } },
+];
+
+const ALL_CDM  = [...CDM_BONUS,  ...CDM_MALUS];
+const ALL_MAT  = [...MAT_BONUS,  ...MAT_MALUS];
+
+// ── SAISONS ──
+const SAISONS = [
+  { id:"hiver",     nom:"❄️ Hiver",     cls:"hiver-bg",     color:"#a8d8ea",
+    tours:[
+      { num:1, name:"Taille de la vigne", desc:"Préparer les ceps pour la saison à venir." },
+      { num:2, name:"Travaux de cave",    desc:"Soins des vins en cours d'élevage." },
+    ],
+    meteos:[
+      { name:"❄️ Neige abondante", bonus:"Aucun",        malus:"-3 rendement (protège cependant du gel profond)" },
+      { name:"🌫️ Gel intense",     bonus:"Aucun",        malus:"-4 rendement, -2 qualité" },
+      { name:"🌤️ Hiver doux",      bonus:"+1 rendement", malus:"-1 qualité (risque maladies précoces)" },
+    ]},
+  { id:"printemps", nom:"🌸 Printemps", cls:"printemps-bg", color:"#b5e8a0",
+    tours:[
+      { num:3, name:"Débourrement & Taille verte", desc:"Gérer la reprise végétative." },
+      { num:4, name:"Palissage & Traitements",     desc:"Structurer la vigne et protéger." },
+    ],
+    meteos:[
+      { name:"🌧️ Pluie de printemps", bonus:"+2 rendement", malus:"-1 qualité (risque mildiou)" },
+      { name:"🥶 Gel tardif",          bonus:"Aucun",         malus:"-4 rendement, -1 qualité" },
+      { name:"☀️ Beau fixe printanier",bonus:"+2 qualité",    malus:"-1 rendement (sécheresse précoce)" },
+    ]},
+  { id:"ete",       nom:"☀️ Été",       cls:"ete-bg",       color:"#ffd166",
+    tours:[
+      { num:5, name:"Véraison & Soins estivaux", desc:"Surveiller la maturation des raisins." },
+      { num:6, name:"Vendange",                  desc:"Récolter au meilleur moment." },
+    ],
+    meteos:[
+      { name:"🔥 Canicule",        bonus:"+3 qualité",              malus:"-3 rendement (stress hydrique)" },
+      { name:"⛈️ Orages estivaux", bonus:"+1 rendement",            malus:"-2 qualité (risque grêle)" },
+      { name:"🌞 Été idéal",       bonus:"+2 qualité, +2 rendement", malus:"Aucun" },
+    ]},
+  { id:"automne",   nom:"🍂 Automne",   cls:"automne-bg",   color:"#e07a5f",
+    tours:[
+      { num:7, name:"Vinification",  desc:"Transformer les raisins en vin." },
+      { num:8, name:"Dégustation",   desc:"Évaluer et affiner le vin produit." },
+    ],
+    meteos:[
+      { name:"🌧️ Pluies automnales", bonus:"+1 rendement",           malus:"-2 qualité (dilution)" },
+      { name:"🍂 Automne chaud",      bonus:"+2 qualité, +1 arôme",   malus:"-1 rendement" },
+      { name:"💨 Vent du nord",       bonus:"+2 qualité",             malus:"-2 rendement (dessèchement)" },
+    ]},
+];
+
+const TOUR_CARDS = {
+  1:{ cls:"th", cards:[
+    { name:"Taille sévère",     bonus:"+2 qualité des grappes", malus:"-2 rendement",          assoc:"Sol Rocheux → +1 qualité" },
+    { name:"Taille équilibrée", bonus:"+1 qualité, +1 rendement", malus:"Aucun",               assoc:"Mode Bio → +1 qualité" },
+    { name:"Taille légère",     bonus:"+3 rendement",           malus:"-2 qualité",            assoc:"Mode Conventionnel → +1 rendement" },
+  ]},
+  2:{ cls:"th", cards:[
+    { name:"Élevage en fût",    bonus:"+3 arômes, +1 qualité",    malus:"-2 rendement",        assoc:"Savagnin → +2 qualité" },
+    { name:"Élevage en cuve",   bonus:"+1 qualité, +2 rendement", malus:"-1 arôme",            assoc:"Pinot Gris → +1 arôme" },
+    { name:"Élevage mixte",     bonus:"+2 qualité, +1 arôme",     malus:"-1 rendement",        assoc:"Chardonnay → +1 arôme" },
+  ]},
+  3:{ cls:"tpr", cards:[
+    { name:"Débourrement surveillé",  bonus:"+2 qualité",             malus:"-1 rendement",         assoc:"Mode Biodynamique → +1 arôme" },
+    { name:"Ébourgeonnage précoce",   bonus:"+2 qualité, +1 arôme",  malus:"-2 rendement",         assoc:"Sol Marneux → +1 qualité" },
+    { name:"Ébourgeonnage tardif",    bonus:"+2 rendement",           malus:"-1 qualité, -1 arôme", assoc:"Mode Conventionnel → +1 rendement" },
+  ]},
+  4:{ cls:"tpr", cards:[
+    { name:"Palissage optimal",           bonus:"+1 qualité, +1 arôme",    malus:"-1 rendement",        assoc:"Soins préventifs → +1 qualité" },
+    { name:"Traitements biologiques",     bonus:"+2 qualité",              malus:"-1 action suivante",  assoc:"Mode Bio → +1 qualité bonus" },
+    { name:"Traitements conventionnels",  bonus:"+1 qualité, +1 rendement",malus:"-1 arôme",            assoc:"Mode Conventionnel → +1 rendement" },
+  ]},
+  5:{ cls:"te", cards:[
+    { name:"Soins préventifs",      bonus:"+3 santé, +1 qualité", malus:"-1 arôme, -1 action T6",  assoc:"Mode Biodynamique → +1 arôme" },
+    { name:"Effeuillage",           bonus:"+2 qualité",           malus:"-1 rendement",            assoc:"Sol Rocheux → +1 qualité" },
+    { name:"Éclaircissage grappes", bonus:"+3 qualité",           malus:"-3 rendement",            assoc:"Savagnin ou Chardonnay → +1 qualité" },
+  ]},
+  6:{ cls:"te", cards:[
+    { name:"Vendange mécanique", bonus:"+3 rendement",          malus:"-1 qualité, -1 arôme",  assoc:"Mode Conventionnel → +1 rendement" },
+    { name:"Vendange manuelle",  bonus:"+2 qualité, +1 arôme",  malus:"-2 rendement",          assoc:"Pinot Noir ou Savagnin → +2 qualité" },
+    { name:"Vendange tardive",   bonus:"+3 arômes, +2 qualité", malus:"-2 rendement",          assoc:"Mode Biodynamique → +1 arôme" },
+  ]},
+  7:{ cls:"tau", cards:[
+    { name:"Vinification traditionnelle",  bonus:"+3 qualité",             malus:"-1 action",     assoc:"Élevage en fût (T2) → +1 arôme" },
+    { name:"Vinification moderne",         bonus:"+2 qualité, +1 arôme",   malus:"-1 rendement",  assoc:"Vendange manuelle (T6) → +2 arômes" },
+    { name:"Vinification en fût de chêne", bonus:"+4 arômes, +1 qualité",  malus:"-2 rendement",  assoc:"Savagnin → +2 qualité, Vin Jaune !" },
+  ]},
+  8:{ cls:"tau", cards:[
+    { name:"Dégustation classique", bonus:"+2 qualité",            malus:"-1 arôme",   assoc:"Vinification moderne → qualité ×2" },
+    { name:"Dégustation premium",   bonus:"+3 qualité, +2 arômes", malus:"-2 actions", assoc:"Vinification en fût → +2 qualité" },
+    { name:"Dégustation critique",  bonus:"+1 qualité, +1 arôme",  malus:"-1 arôme",   assoc:"Vinification traditionnelle → annule malus" },
+  ]},
+};
+
+// ── ÉVÉNEMENTS V7 ──
+const EVENEMENTS = {
+  printemps: [
+    { name:"🥶 Gel de printemps", desc:"Une gelée tardive fragilise les jeunes pousses.", effet:"-2 rendement pour chaque joueur.", delta:{q:0,a:0,r:-2} }
+  ],
+  ete: [
+    { name:"🌬️ Vent sec", desc:"Le vent dessèche les sols et fatigue la vigne.", effet:"-1 rendement et +1 qualité pour chaque joueur.", delta:{q:1,a:0,r:-1} }
+  ],
+  automne: [
+    { name:"🎉 Fête du vin", desc:"La région célèbre les vendanges et les vins du Jura.", effet:"+2 arômes pour chaque joueur.", delta:{q:0,a:2,r:0} }
+  ]
+};
+
+// ════════════════════════════
+// STATE
+// ════════════════════════════
+
+let G={
+  nb:0, players:[], setupP:0,
+  saisonIdx:0, tourInSaison:0, meteo:null, evenement:null,
+  currentP:0, drawn:[], chosen:null, allChosen:[],
+  selectedHandCard:null,
+  // Solo mode
+  soloMode:false,
+  aiDiff:'normal', // 'easy'|'normal'|'hard'
+  aiIdx:1,         // index of AI player
+};
+
+// ════════════════════════════
+// HOME — mode selection
+// ════════════════════════════
+function selectMode(m){
+  document.getElementById('solo-fields').style.display  = m==='solo'  ? 'block':'none';
+  document.getElementById('multi-fields').style.display = m==='multi' ? 'block':'none';
+  ['mode-solo','mode-multi'].forEach(id=>{
+    const b=document.getElementById(id);
+    b.style.background= b.id==='mode-'+m ? 'var(--gold)':'';
+    b.style.color=      b.id==='mode-'+m ? '#1a0a2e':'';
+  });
+}
+
+let _diff='normal';
+function setDiff(d){
+  _diff=d;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('diff-'+d).classList.add('sel');
+}
+
+function goSolo(){
+  const nm=document.getElementById('solo-name');
+  const name=nm&&nm.value.trim()?nm.value.trim():'Joueur';
+  if(!_diff){ toast('Choisis une difficulté !','warn'); return; }
+
+  G.soloMode=true; G.aiDiff=_diff; G.aiIdx=1;
+  const human={ name, cepage:rand(CEPAGES), terroir:rand(TERROIRS), mode:null,
+    q:0, a:0, r:0, cdm:pickN(ALL_CDM,3).map(c=>({...c,played:false})), mat:pickN(ALL_MAT,3).map(c=>({...c,played:false})), isAI:false };
+  const ai={    name:'🏚️ La Cave Coopérative', cepage:rand(CEPAGES), terroir:rand(TERROIRS), mode:rand(MODES),
+    q:0, a:0, r:0, cdm:pickN(ALL_CDM,3).map(c=>({...c,played:false})), mat:pickN(ALL_MAT,3).map(c=>({...c,played:false})), isAI:true };
+  G.nb=2; G.players=[human, ai]; G.setupP=0;
+  renderSetupTabs(); renderSetupBody(); go('p-setup');
+}
+
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function pick3(arr){ return [...arr].sort(()=>Math.random()-.5).slice(0,3); }
+function pickN(arr,n){ return [...arr].sort(()=>Math.random()-.5).slice(0,n); }
+
+function tourAbsolu(){ return G.saisonIdx*2+G.tourInSaison; }
+function tourNum(){ return tourAbsolu()+1; }
+function getSaison(){ return SAISONS[G.saisonIdx]; }
+function getTour(){ return getSaison().tours[G.tourInSaison]; }
+
+// ════════════════════════════
+// NAV
+// ════════════════════════════
+function go(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('on')); document.getElementById(id).classList.add('on'); window.scrollTo(0,0); }
+
+// ════════════════════════════
+// PAGE 1
+// ════════════════════════════
+function setNb(n){
+  G.nb=n; G.soloMode=false;
+  ['nb2','nb3','nb4'].forEach(id=>{ const b=document.getElementById(id); b.style.background=''; b.style.color=''; });
+  const b=document.getElementById('nb'+n); b.style.background='var(--gold)'; b.style.color='#1a0a2e';
+  document.getElementById('name-fields').style.display='block';
+  let h=''; for(let i=0;i<n;i++) h+=`<input type="text" id="nm${i}" placeholder="Joueur ${i+1}">`;
+  document.getElementById('name-inputs').innerHTML=h;
+}
+
+function goSetup(){
+  if(!G.nb){ toast('Choisis le nombre de joueurs !'); return; }
+  G.players=[];
+  for(let i=0;i<G.nb;i++){
+    const nm=document.getElementById('nm'+i);
+    // Distribuer 3 CDM et 3 Matériel aléatoires
+    const cdm=pickN(ALL_CDM,3);
+    const mat=pickN(ALL_MAT,3);
+    G.players.push({
+      name: nm&&nm.value.trim()?nm.value.trim():`Joueur ${i+1}`,
+      cepage: rand(CEPAGES), terroir: rand(TERROIRS), mode: null,
+      q:0, a:0, r:0,
+      cdm: cdm.map((c,j)=>({...c, played:false})),
+      mat: mat.map((c,j)=>({...c, played:false})),
+    });
+  }
+  G.setupP=0; renderSetupTabs(); renderSetupBody(); go('p-setup');
+}
+
+// ════════════════════════════
+// PAGE 2 : SETUP
+// ════════════════════════════
+function renderSetupTabs(){
+  document.getElementById('setup-tabs').innerHTML=
+    G.players.map((p,i)=>`<div class="tab ${i===G.setupP?'on':''}" onclick="switchSetup(${i})">${p.name}</div>`).join('');
+}
+function switchSetup(i){ G.setupP=i; renderSetupTabs(); renderSetupBody(); }
+
+function renderSetupBody(){
+  const p=G.players[G.setupP];
+  let h=`
+    <div class="card tc"><div class="card-top"></div>
+      <div class="lbl">🍇 Cépage — Arbois, Jura</div>
+      <div class="cname">${p.cepage.name}</div>
+      <p style="margin-bottom:10px;font-style:italic;font-size:.8rem;">${p.cepage.desc}</p>
+      ${row('✅','lg','Bonus',p.cepage.bonus)}${row('⛔','lr','Malus',p.cepage.malus)}${row('🔗','lb','Association',p.cepage.assoc)}
+    </div>
+    <div class="card ttr"><div class="card-top"></div>
+      <div class="lbl">🌱 Terroir — Arbois, Jura</div>
+      <div class="cname">${p.terroir.name}</div>
+      <p style="margin-bottom:10px;font-style:italic;font-size:.8rem;">${p.terroir.desc}</p>
+      ${row('✅','lg','Bonus',p.terroir.bonus)}${row('⛔','lr','Malus',p.terroir.malus)}${row('🔗','lb','Association',p.terroir.assoc)}
+    </div>
+    <h3 style="margin-top:18px;">🌿 Mode agricole</h3>
+    <p style="margin-bottom:12px;">Ce choix s'applique à toute la partie.</p>`;
+
+  MODES.forEach((m,i)=>{
+    const sel=p.mode&&p.mode.name===m.name;
+    h+=`<div class="mcard ${sel?'sel':''}" onclick="setMode(${G.setupP},${i})">
+      <div class="mcard-title">${m.name}</div>
+      <div class="mcard-body">
+        <span style="color:var(--green)">▲ ${m.bonus}</span><br>
+        <span style="color:var(--red)">▼ ${m.malus}</span><br>
+        <span style="color:var(--blue)">⬡ ${m.assoc}</span>
+      </div>
+    </div>`;
+  });
+
+  // Afficher les cartes spéciales reçues
+  h+=`<h3 style="margin-top:18px;">🃏 Tes cartes spéciales</h3>
+  <p style="margin-bottom:12px;">Tu peux jouer chaque carte une seule fois par partie, au tour de ton choix.</p>
+  <div class="hand-section cdm">
+    <div class="hand-title cdm-t">🤝 Coup de Main (${p.cdm.length} cartes)</div>
+    <div class="hand-cards">`;
+  p.cdm.forEach(c=>{
+    const isMalus=c.type==='cdm-ml';
+    h+=`<div class="hand-card ${c.type}">
+      <div class="hand-card-name">${c.name} <span class="badge ${isMalus?'badge-m':'badge-b'}">${isMalus?'MALUS':'BONUS'}</span></div>
+      <div class="hand-card-eff">${c.effet}</div>
+    </div>`;
+  });
+  h+=`</div></div>
+  <div class="hand-section mat">
+    <div class="hand-title mat-t">🔧 Matériel (${p.mat.length} cartes)</div>
+    <div class="hand-cards">`;
+  p.mat.forEach(c=>{
+    const isMalus=c.type==='mat-ml';
+    h+=`<div class="hand-card ${c.type}">
+      <div class="hand-card-name">${c.name} <span class="badge ${isMalus?'badge-m':'badge-b'}">${isMalus?'MALUS':'BONUS'}</span></div>
+      <div class="hand-card-eff">${c.effet}</div>
+    </div>`;
+  });
+  h+=`</div></div>`;
+
+  document.getElementById('setup-body').innerHTML=h;
+}
+
+function setMode(pi,mi){ G.players[pi].mode=MODES[mi]; renderSetupBody(); }
+
+function checkSetup(){
+  const miss=G.players.find(p=>!p.mode);
+  if(miss){ toast(`${miss.name} doit choisir un mode !`,'warn'); return; }
+  G.saisonIdx=0; G.tourInSaison=0;
+  beginSaison(); go('p-game');
+}
+
+// ════════════════════════════
+// PAGE 3 : JEU
+// ════════════════════════════
+function beginSaison(){
+  G.meteo=rand(getSaison().meteos);
+  const eventKey=['hiver','printemps','ete','automne'][G.saisonIdx];
+  G.evenement=EVENEMENTS[eventKey] ? rand(EVENEMENTS[eventKey]) : null;
+  G.currentP=0; G.allChosen=[];
+  renderGameHeader(); renderGameTabs(); drawForCurrentPlayer(); renderHand();
+}
+
+function renderGameHeader(){
+  const s=getSaison(); const t=getTour();
+  document.getElementById('prog').style.width=(tourAbsolu()/8*100)+'%';
+  document.getElementById('g-saison-header').innerHTML=`
+    <div class="saison-header ${s.cls}" style="color:white;">
+      <div>
+        <div class="stour">Tour ${tourNum()} / 8</div>
+        <div class="snom">${s.nom} — ${t.name}</div>
+        <div style="font-size:.78rem;opacity:.8;margin-top:3px;">${t.desc}</div>
+      </div>
+      <div style="font-size:2rem;">${tourNum()}</div>
+    </div>`;
+  const mc=G.meteo;
+  document.getElementById('g-meteo').innerHTML=`
+    <div class="meteo-banner ${s.cls}">
+      <div class="lbl" style="color:rgba(255,255,255,.7);margin-bottom:4px;">☁️ Météo — ${s.nom} (tours ${G.saisonIdx*2+1} & ${G.saisonIdx*2+2})</div>
+      <div class="mname">${mc.name}</div>
+      <div class="mdet">▲ ${mc.bonus} &nbsp;|&nbsp; ▼ ${mc.malus}</div>
+    </div>` + (G.evenement ? `
+    <div class="card" style="border-color:rgba(212,168,67,.45);background:linear-gradient(135deg,#2a1848,#1e1035);">
+      <div class="lbl" style="color:var(--gold);">🃏 ÉVÉNEMENT DE SAISON — V9</div>
+      <div class="cname">${G.evenement.name}</div>
+      <p style="margin-bottom:8px;">${G.evenement.desc}</p>
+      <div class="mdet" style="color:var(--gold2);font-weight:700;">${G.evenement.effet}</div>
+    </div>` : '');
+}
+
+function renderGameTabs(){
+  document.getElementById('game-tabs').innerHTML=
+    G.players.map((p,i)=>`<div class="tab ${i===G.currentP?'on':''}" onclick="showProfile(${i})">${p.name} <span style="font-size:.65rem;opacity:.6;">👁</span></div>`).join('');
+}
+
+function drawForCurrentPlayer(){
+  const tc=TOUR_CARDS[tourNum()];
+  G.drawn=pick3(tc.cards); G.chosen=null;
+  const p=G.players[G.currentP];
+
+  if(p.isAI){
+    // Show AI thinking banner then auto-play
+    const thinkMsg=aiThinkMessage();
+    document.getElementById('g-body').innerHTML=`
+      <div class="ai-banner">
+        <div class="ai-avatar">🏚️</div>
+        <div class="ai-info">
+          <div class="ai-name">La Cave Coopérative</div>
+          <div class="ai-diff">${diffLabel()}</div>
+        </div>
+      </div>
+      <div class="ai-thinking">💭 ${thinkMsg}</div>
+      <p style="text-align:center;margin-top:20px;">La Cave réfléchit...</p>`;
+    document.getElementById('g-actions').innerHTML='';
+    document.getElementById('g-hand').innerHTML='';
+    setTimeout(()=>aiPlayTurn(), 1800);
+    return;
+  }
+
+  let h=`<p style="margin-bottom:12px;"><b style="color:var(--gold2)">${p.name}</b> — Choisis une carte :</p>`;
+  G.drawn.forEach((c,i)=>{
+    h+=`<div class="card pick ${tc.cls}" onclick="pickCard(${i})"><div class="card-top"></div>
+      <div class="cname">${c.name}</div>
+      ${row('✅','lg','Bonus',c.bonus)}${row('⛔','lr','Malus',c.malus)}${row('🔗','lb','Association',c.assoc)}
+    </div>`;
+  });
+  document.getElementById('g-body').innerHTML=h;
+  document.getElementById('g-actions').innerHTML=`<button class="btn btn-gold" id="btn-ok" onclick="confirmPick()" style="display:none;">Confirmer la carte ✓</button>`;
+}
+
+function diffLabel(){
+  return {easy:'🌱 Facile',normal:'🍷 Normal',hard:'💀 Difficile'}[G.aiDiff]||'Normal';
+}
+
+function aiThinkMessage(){
+  const msgs={
+    easy:['Je choisis au hasard...','Hmm, allez, celui-là !','Un peu au pif...'],
+    normal:['Je cherche la meilleure qualité...','Analysons les cartes...','Quel est le meilleur choix ?'],
+    hard:['Je calcule ton score... attention !','Stratégie en cours...','Je vais te compliquer la vie 😈','La vendange sera pour moi !'],
+  };
+  return rand(msgs[G.aiDiff]||msgs.normal);
+}
+
+// ── AI BRAIN ──
+function aiPlayTurn(){
+  const tc=TOUR_CARDS[tourNum()];
+  const ai=G.players[G.aiIdx];
+  const human=G.players[0];
+  let chosen;
+
+  if(G.aiDiff==='easy'){
+    // Random
+    chosen=Math.floor(Math.random()*G.drawn.length);
+
+  } else if(G.aiDiff==='normal'){
+    // Pick card with best quality bonus
+    let best=-99, bestI=0;
+    G.drawn.forEach((c,i)=>{
+      const d=parsePoints(c.bonus);
+      const score=d.q*2+d.a+d.r;
+      if(score>best){ best=score; bestI=i; }
+    });
+    chosen=bestI;
+
+  } else {
+    // Hard: pick best card + try to play a malus card on human
+    let best=-99, bestI=0;
+    G.drawn.forEach((c,i)=>{
+      const d=parsePoints(c.bonus);
+      const score=d.q*3+d.a*2+d.r;
+      if(score>best){ best=score; bestI=i; }
+    });
+    chosen=bestI;
+
+    // Play malus CDM on human if available and human has decent score
+    const malusCdm=ai.cdm.find(c=>!c.played&&c.type==='cdm-ml');
+    if(malusCdm&&human.q+human.a+human.r>5){
+      malusCdm.appliquer(ai,human,'');
+      malusCdm.played=true;
+      toast(`🏚️ La Cave joue "${malusCdm.name}" contre ${human.name} !`,'warn');
+    }
+    // Play bonus mat on self if available
+    const bonusMat=ai.mat.find(c=>!c.played&&c.type==='mat-b');
+    if(bonusMat){
+      bonusMat.appliquer(ai,ai,G.meteo?G.meteo.name:'');
+      bonusMat.played=true;
+    }
+  }
+
+  // Show what AI picked
+  const pickedCard=G.drawn[chosen];
+  const shownCard=`
+    <div class="card ${tc.cls}" style="border:2px solid rgba(171,71,188,.5);"><div class="card-top"></div>
+      <div class="lbl" style="color:#CE93D8;">🏚️ La Cave Coopérative a choisi</div>
+      <div class="cname">${pickedCard.name}</div>
+      ${row('✅','lg','Bonus',pickedCard.bonus)}${row('⛔','lr','Malus',pickedCard.malus)}
+    </div>`;
+  document.getElementById('g-body').innerHTML=shownCard;
+  document.getElementById('g-actions').innerHTML=`<button class="btn btn-gold" onclick="aiConfirm(${chosen})">Continuer →</button>`;
+}
+
+function aiConfirm(idx){
+  G.allChosen.push({player:G.aiIdx, card:G.drawn[idx]});
+  G.currentP++;
+  if(G.currentP<G.players.length){ renderGameTabs(); drawForCurrentPlayer(); renderHand(); window.scrollTo(0,0); }
+  else goScores();
+}
+
+function renderHand(){
+  const p=G.players[G.currentP];
+  if(p.isAI){ document.getElementById('g-hand').innerHTML=''; return; }
+  const cdmAvail=p.cdm.filter(c=>!c.played);
+  const matAvail=p.mat.filter(c=>!c.played);
+
+
+  let h='<hr>';
+  // CDM
+  if(cdmAvail.length>0){
+    h+=`<div class="hand-section cdm">
+      <div class="hand-title cdm-t">🤝 Coup de Main (${cdmAvail.length} restante${cdmAvail.length>1?'s':''})</div>
+      <div class="hand-cards">`;
+    p.cdm.forEach((c,i)=>{
+      if(c.played) return;
+      h+=`<div class="hand-card ${c.type}" onclick="selectHandCard('cdm',${i})">
+        <div class="hand-card-name">${c.name}</div>
+        <div class="hand-card-eff">${c.effet}</div>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  }
+  // Matériel
+  if(matAvail.length>0){
+    h+=`<div class="hand-section mat">
+      <div class="hand-title mat-t">🔧 Matériel (${matAvail.length} restante${matAvail.length>1?'s':''})</div>
+      <div class="hand-cards">`;
+    p.mat.forEach((c,i)=>{
+      if(c.played) return;
+      h+=`<div class="hand-card ${c.type}" onclick="selectHandCard('mat',${i})">
+        <div class="hand-card-name">${c.name}</div>
+        <div class="hand-card-eff">${c.effet}</div>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  }
+  document.getElementById('g-hand').innerHTML=h;
+}
+
+function pickCard(i){
+  G.chosen=i;
+  document.querySelectorAll('#g-body .card.pick').forEach((el,j)=>el.classList.toggle('sel',j===i));
+  document.getElementById('btn-ok').style.display='block';
+}
+
+function selectHandCard(type,idx){
+  const p=G.players[G.currentP];
+  const card=type==='cdm'?p.cdm[idx]:p.mat[idx];
+  G.selectedHandCard={type,idx,card};
+
+  // Est-ce que ça cible quelqu'un ?
+  const needsTarget = type==='mat'
+    ? card.type==='mat-ml'
+    : true; // toutes les CDM ciblent quelqu'un
+
+  if(needsTarget){
+    showTargetModal(type,idx,card);
+  } else {
+    // matériel bonus → s'applique sur soi-même
+    playHandCard(type,idx,G.currentP,G.currentP);
+  }
+}
+
+function showTargetModal(type,idx,card){
+  const isMalus=card.type.endsWith('-ml');
+  let h=`<div class="modal-title" style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold2);margin-bottom:6px;">${card.name}</div>
+    <p style="margin-bottom:16px;">${card.effet}</p>
+    <p style="color:${isMalus?'var(--red)':'var(--green)'};font-weight:700;margin-bottom:12px;">
+      ${isMalus?'🎯 Qui veux-tu cibler ?':'🎯 À qui veux-tu aider ?'}
+    </p>
+    <div class="target-btns">`;
+
+  G.players.forEach((p,i)=>{
+    h+=`<button class="tbtn" onclick="playHandCard('${type}',${idx},${G.currentP},${i})">${p.name}</button>`;
+  });
+  h+=`</div>`;
+  document.getElementById('modal-content').innerHTML=h;
+  document.getElementById('modal-special').classList.add('on');
+}
+
+function playHandCard(type,cardIdx,srcIdx,tgtIdx){
+  closeModal();
+  const p=G.players[srcIdx];
+  const card=type==='cdm'?p.cdm[cardIdx]:p.mat[cardIdx];
+  const src=G.players[srcIdx];
+  const tgt=G.players[tgtIdx];
+
+  let msg='';
+  if(card.appliquer){ msg=card.appliquer(src,tgt,G.meteo?G.meteo.name:''); }
+  card.played=true;
+
+
+
+  toast('✓ '+msg);
+  renderHand();
+}
+
+function confirmPick(){
+  if(G.chosen===null){ toast('Choisis une carte de tour !','warn'); return; }
+  G.allChosen.push({player:G.currentP,card:G.drawn[G.chosen]});
+  G.currentP++;
+  if(G.currentP<G.players.length){
+    // Réinitialiser les cartes spéciales jouées pour le prochain joueur
+    renderGameTabs(); drawForCurrentPlayer(); renderHand(); window.scrollTo(0,0);
+  } else {
+    goScores();
+  }}
+
+// ════════════════════════════
+// PAGE 4 : SCORES
+// ════════════════════════════
+// ── Parse a bonus/malus string and return {q,a,r} delta ──
+function parsePoints(str){
+  const delta={q:0,a:0,r:0};
+  if(!str||str==='Aucun') return delta;
+  // match patterns like +2 qualité, -1 arôme, +3 rendement
+  const patterns=[
+    {re:/([+-]\d+)\s*(qualité|quality)/gi,   key:'q'},
+    {re:/([+-]\d+)\s*(arôme|arome|aromes)/gi, key:'a'},
+    {re:/([+-]\d+)\s*(rendement|rend)/gi,    key:'r'},
+  ];
+  patterns.forEach(({re,key})=>{
+    let m; re.lastIndex=0;
+    while((m=re.exec(str))!==null){ delta[key]+=parseInt(m[1]); }
+  });
+  return delta;
+}
+
+function applyDelta(p, d){
+  p.q=Math.max(0,p.q+d.q);
+  p.a=Math.max(0,p.a+d.a);
+  p.r=Math.max(0,p.r+d.r);
+}
+
+function autoScoreBreakdown(p, ch){
+  // Returns array of {label, dq, da, dr}
+  const lines=[];
+  if(!ch) return lines;
+  const card=ch.card;
+  // Bonus from card
+  const bDelta=parsePoints(card.bonus);
+  if(bDelta.q||bDelta.a||bDelta.r) lines.push({label:'✅ '+card.name+' (bonus)', d:bDelta});
+  // Malus from card (negate)
+  const mStr=card.malus||'';
+  if(mStr&&mStr!=='Aucun'&&!mStr.includes('action')){
+    const mDelta=parsePoints(mStr);
+    // malus values in text are already negative
+    if(mDelta.q||mDelta.a||mDelta.r) lines.push({label:'⛔ '+card.name+' (malus)', d:mDelta});
+  }
+  // Mode passif
+  const mode=p.mode;
+  if(mode){
+    const modeDelta=parsePoints(mode.bonus);
+    if(modeDelta.q||modeDelta.a||modeDelta.r) lines.push({label:'🌿 Mode '+mode.name.replace(/^[^ ]+ /,'')+ ' (passif)', d:modeDelta});
+  }
+  // Événement de saison V7
+  if(G.evenement && G.evenement.delta && G.tourInSaison===0){
+    const d=G.evenement.delta;
+    if(d.q||d.a||d.r) lines.push({label:'🃏 '+G.evenement.name, d:{q:d.q,a:d.a,r:d.r}});
+  }
+  // Météo
+  if(G.meteo){
+    const meteoBDelta=parsePoints(G.meteo.bonus);
+    if(meteoBDelta.q||meteoBDelta.a||meteoBDelta.r) lines.push({label:'☁️ '+G.meteo.name+' (bonus)', d:meteoBDelta});
+    const meteoMDelta=parsePoints(G.meteo.malus);
+    if(meteoMDelta.q||meteoMDelta.a||meteoMDelta.r) lines.push({label:'☁️ '+G.meteo.name+' (malus)', d:meteoMDelta});
+  }
+  return lines;
+}
+
+function fmtDelta(v, key){
+  if(!v) return '';
+  const icons={q:'⭐',a:'🌸',r:'🍾'};
+  const sign=v>0?'+':'';
+  const cls=v>0?'pos':'neg';
+  return `<span class="aval ${cls}">${icons[key]} ${sign}${v}</span>`;
+}
+
+function goScores(){
+  const s=getSaison(); const t=getTour();
+  document.getElementById('sc-label').textContent=`${s.nom} — ${t.name}`;
+
+  // Auto-apply points for each player
+  G.players.forEach((p,pi)=>{
+    const ch=G.allChosen.find(x=>x.player===pi);
+    const lines=autoScoreBreakdown(p,ch);
+    lines.forEach(l=>applyDelta(p,l.d));
+  });
+
+  let h='';
+  G.players.forEach((p,pi)=>{
+    const ch=G.allChosen.find(x=>x.player===pi);
+    const lines=autoScoreBreakdown(p,ch);
+    const total=p.q*2+p.a+p.r;
+
+    let bRows='';
+    lines.forEach(l=>{
+      const parts=[];
+      if(l.d.q) parts.push(fmtDelta(l.d.q,'q'));
+      if(l.d.a) parts.push(fmtDelta(l.d.a,'a'));
+      if(l.d.r) parts.push(fmtDelta(l.d.r,'r'));
+      bRows+=`<div class="auto-row"><span>${l.label}</span><span>${parts.join(' ')}</span></div>`;
+    });
+
+    if(p.isAI){
+      // AI score — read only, no adjustment buttons
+      h+=`<div class="card" style="margin-bottom:14px;border-color:rgba(171,71,188,.3);"><div class="card-top" style="background:linear-gradient(90deg,#4A148C,#CE93D8);"></div>
+        <div class="cname" style="font-size:1rem;">${p.name}</div>
+        <div class="auto-score">
+          <div class="auto-score-title">Points de La Cave</div>
+          ${bRows||'<div class="auto-row"><span>—</span><span>—</span></div>'}
+        </div>
+        <div class="scores">
+          <div class="sbox"><div class="sico">⭐</div><div class="slbl">Qualité</div><div class="sval">${p.q}</div></div>
+          <div class="sbox"><div class="sico">🌸</div><div class="slbl">Arômes</div><div class="sval">${p.a}</div></div>
+          <div class="sbox"><div class="sico">🍾</div><div class="slbl">Rendement</div><div class="sval">${p.r}</div></div>
+        </div>
+        <div class="total-bar"><span class="tlbl">Total</span><span class="tval">${total}</span></div>
+      </div>`;
+    } else {
+      h+=`<div class="card" style="margin-bottom:14px;"><div class="card-top"></div>
+        <div class="cname" style="font-size:1rem;">${p.name}</div>
+        <div class="auto-score">
+          <div class="auto-score-title">Points calculés automatiquement</div>
+          ${bRows||'<div class="auto-row"><span>Aucune carte jouée</span><span>—</span></div>'}
+        </div>
+        <div class="scores">
+          <div class="sbox"><div class="sico">⭐</div><div class="slbl">Qualité</div>
+            <div class="sval" id="sq${pi}">${p.q}</div>
+            <div class="ctrl"><button class="sbtn sm" onclick="adj(${pi},'q',-1)">−</button><button class="sbtn sp" onclick="adj(${pi},'q',+1)">+</button></div>
+          </div>
+          <div class="sbox"><div class="sico">🌸</div><div class="slbl">Arômes</div>
+            <div class="sval" id="sa${pi}">${p.a}</div>
+            <div class="ctrl"><button class="sbtn sm" onclick="adj(${pi},'a',-1)">−</button><button class="sbtn sp" onclick="adj(${pi},'a',+1)">+</button></div>
+          </div>
+          <div class="sbox"><div class="sico">🍾</div><div class="slbl">Rendement</div>
+            <div class="sval" id="sr${pi}">${p.r}</div>
+            <div class="ctrl"><button class="sbtn sm" onclick="adj(${pi},'r',-1)">−</button><button class="sbtn sp" onclick="adj(${pi},'r',+1)">+</button></div>
+          </div>
+        </div>
+        <div class="total-bar">
+          <span class="tlbl">Score total (Q×2 + A + R)</span>
+          <span class="tval" id="stot${pi}">${total}</span>
+        </div>
+        <p class="center" style="font-size:.72rem;margin-top:6px;">Ajuste si besoin avec les boutons ±</p>
+      </div>`;
+    }
+  });
+  document.getElementById('sc-body').innerHTML=h;
+  const isLast=tourAbsolu()===7;
+  document.getElementById('sc-btn').textContent=isLast?'🏆 Voir les résultats':'Tour suivant →';
+  go('p-scores');
+}
+
+function adj(pi,stat,delta){
+  G.players[pi][stat]=Math.max(0,G.players[pi][stat]+delta);
+  document.getElementById('s'+stat+pi).textContent=G.players[pi][stat];
+  const p=G.players[pi];
+  const tot=document.getElementById('stot'+pi);
+  if(tot) tot.textContent=p.q*2+p.a+p.r;
+}
+
+function nextTour(){
+  if(tourAbsolu()===7){ endGame(); return; }
+  G.tourInSaison++;
+  if(G.tourInSaison>=2){ G.saisonIdx++; G.tourInSaison=0; beginSaison(); }
+  else { G.currentP=0; G.allChosen=[]; renderGameHeader(); renderGameTabs(); drawForCurrentPlayer(); renderHand(); }
+  go('p-game');
+}
+
+// ════════════════════════════
+// PAGE 5 : FIN
+// ════════════════════════════
+function endGame(){
+  const res=[...G.players].map(p=>({...p,total:p.q*2+p.a+p.r})).sort((a,b)=>b.total-a.total||b.a-a.a||b.r-a.r);
+  const med=['🥇','🥈','🥉','4️⃣'];
+  document.getElementById('end-podium').innerHTML=res.map((r,i)=>`
+    <div class="pod ${i===0?'p1':''}">
+      <div class="prk">${med[i]}</div>
+      <div><div class="pnm">${r.name}</div><div class="psb">${r.cepage.name} • ${r.terroir.name}</div></div>
+      <div class="ptot">${r.total} pts</div>
+    </div>`).join('');
+  document.getElementById('end-detail').innerHTML=res.map(r=>`
+    <div class="card" style="margin-bottom:10px;"><div class="card-top"></div>
+      <div class="cname" style="font-size:1rem;">${r.name} — ${r.mode.name}</div>
+      <div class="scores">
+        <div class="sbox"><div class="sico">⭐</div><div class="slbl">Qualité ×2</div><div class="sval">${r.q*2}</div></div>
+        <div class="sbox"><div class="sico">🌸</div><div class="slbl">Arômes</div><div class="sval">${r.a}</div></div>
+        <div class="sbox"><div class="sico">🍾</div><div class="slbl">Rendement</div><div class="sval">${r.r}</div></div>
+      </div>
+      <p style="text-align:right;margin-top:8px;">Total : <b style="color:var(--gold);font-size:1.1rem;">${r.total} pts</b></p>
+    </div>`).join('');
+  go('p-end');
+}
+
+function newGame(){
+  G={nb:0,players:[],setupP:0,saisonIdx:0,tourInSaison:0,meteo:null,evenement:null,currentP:0,drawn:[],chosen:null,allChosen:[],selectedHandCard:null,soloMode:false,aiDiff:'normal',aiIdx:1};
+  ['nb2','nb3','nb4'].forEach(id=>{const b=document.getElementById(id);b.style.background='';b.style.color='';});
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('sel'));
+  const nf=document.getElementById('name-fields'); if(nf) nf.style.display='none';
+  document.getElementById('solo-fields').style.display='none';
+  document.getElementById('multi-fields').style.display='none';
+  ['mode-solo','mode-multi'].forEach(id=>{const b=document.getElementById(id);b.style.background='';b.style.color='';});
+  _diff='normal';
+  go('p-home');
+}
+
+// ════════════════════════════
+// MODAL
+// ════════════════════════════
+function closeModal(){ document.getElementById('modal-special').classList.remove('on'); }
+function closeModalOutside(e){ if(e.target===document.getElementById('modal-special')) closeModal(); }
+
+function closeProfile(){ document.getElementById('modal-profile').classList.remove('on'); }
+function closeProfileOutside(e){ if(e.target===document.getElementById('modal-profile')) closeProfile(); }
+
+function showProfile(pi){
+  const p=G.players[pi];
+  const total=p.q*2+p.a+p.r;
+  let h=`
+    <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold2);margin-bottom:4px;">${p.name}</div>
+    <div style="font-size:.72rem;color:var(--muted);margin-bottom:16px;">${p.mode?p.mode.name:''}</div>
+
+    <div class="profile-section">
+      <div class="profile-section-title">📊 Scores actuels</div>
+      <div class="total-bar" style="margin-bottom:10px;">
+        <span class="tlbl">Total (Q×2 + A + R)</span>
+        <span class="tval">${total} pts</span>
+      </div>
+      <div class="scores" style="margin:0;">
+        <div class="sbox"><div class="sico">⭐</div><div class="slbl">Qualité</div><div class="sval">${p.q}</div></div>
+        <div class="sbox"><div class="sico">🌸</div><div class="slbl">Arômes</div><div class="sval">${p.a}</div></div>
+        <div class="sbox"><div class="sico">🍾</div><div class="slbl">Rendement</div><div class="sval">${p.r}</div></div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <div class="profile-section-title">🍇 Cépage</div>
+      <div class="profile-card">
+        <div class="profile-card-name">${p.cepage.name}</div>
+        <div class="profile-card-eff" style="color:var(--green);">▲ ${p.cepage.bonus}</div>
+        <div class="profile-card-eff" style="color:var(--red);">▼ ${p.cepage.malus}</div>
+        <div class="profile-card-eff" style="color:var(--blue);">⬡ ${p.cepage.assoc}</div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <div class="profile-section-title">🌱 Terroir</div>
+      <div class="profile-card">
+        <div class="profile-card-name">${p.terroir.name}</div>
+        <div class="profile-card-eff" style="color:var(--green);">▲ ${p.terroir.bonus}</div>
+        <div class="profile-card-eff" style="color:var(--red);">▼ ${p.terroir.malus}</div>
+        <div class="profile-card-eff" style="color:var(--blue);">⬡ ${p.terroir.assoc}</div>
+      </div>
+    </div>`;
+
+  if(p.mode){
+    h+=`<div class="profile-section">
+      <div class="profile-section-title">🌿 Mode agricole</div>
+      <div class="profile-card">
+        <div class="profile-card-name">${p.mode.name}</div>
+        <div class="profile-card-eff" style="color:var(--green);">▲ ${p.mode.bonus}</div>
+        <div class="profile-card-eff" style="color:var(--red);">▼ ${p.mode.malus}</div>
+      </div>
+    </div>`;
+  }
+
+  // CDM cards
+  const cdmLeft=p.cdm.filter(c=>!c.played);
+  const cdmUsed=p.cdm.filter(c=>c.played);
+  h+=`<div class="profile-section">
+    <div class="profile-section-title">🤝 Coup de Main (${cdmLeft.length} restantes)</div>`;
+  cdmLeft.forEach(c=>{
+    const isM=c.type==='cdm-ml';
+    h+=`<div class="profile-card">
+      <div class="profile-card-name">${c.name} <span class="badge ${isM?'badge-m':'badge-b'}">${isM?'MALUS':'BONUS'}</span></div>
+      <div class="profile-card-eff">${c.effet}</div>
+    </div>`;
+  });
+  if(cdmUsed.length) cdmUsed.forEach(c=>{
+    h+=`<div class="profile-card" style="opacity:.4;">
+      <div class="profile-card-name">${c.name} <span class="played-tag">Jouée</span></div>
+    </div>`;
+  });
+  h+=`</div>`;
+
+  // Matériel cards
+  const matLeft=p.mat.filter(c=>!c.played);
+  const matUsed=p.mat.filter(c=>c.played);
+  h+=`<div class="profile-section">
+    <div class="profile-section-title">🔧 Matériel (${matLeft.length} restantes)</div>`;
+  matLeft.forEach(c=>{
+    const isM=c.type==='mat-ml';
+    h+=`<div class="profile-card">
+      <div class="profile-card-name">${c.name} <span class="badge ${isM?'badge-m':'badge-b'}">${isM?'MALUS':'BONUS'}</span></div>
+      <div class="profile-card-eff">${c.effet}</div>
+    </div>`;
+  });
+  if(matUsed.length) matUsed.forEach(c=>{
+    h+=`<div class="profile-card" style="opacity:.4;">
+      <div class="profile-card-name">${c.name} <span class="played-tag">Jouée</span></div>
+    </div>`;
+  });
+  h+=`</div>`;
+
+  document.getElementById('modal-profile-content').innerHTML=h;
+  document.getElementById('modal-profile').classList.add('on');
+}
+
+// ════════════════════════════
+// HELPERS
+// ════════════════════════════
+function row(ico,cls,lbl,val){ return `<div class="crow"><span class="ico">${ico}</span><div><span class="rlbl ${cls}">${lbl} : </span><span class="rval">${val}</span></div></div>`; }
+function toast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast on'+(type==='warn'?' warn':'');
+  setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// V9 — SALONS EN LIGNE (Firebase Authentication + Cloud Firestore)
+// Cette première étape synchronise les salons et les présences.
+// Le moteur de partie multi-appareils sera branché ensuite.
+// ═══════════════════════════════════════════════════════════════
+const FIREBASE_CONFIG_V8 = {
+  apiKey: "AIzaSyDPhB2NRVZg4yo-VK8aAspTp_o5-_09Lhc",
+  authDomain: "le-canon.firebaseapp.com",
+  projectId: "le-canon",
+  storageBucket: "le-canon.firebasestorage.app",
+  messagingSenderId: "471949617652",
+  appId: "1:471949617652:web:0aa36c11dd777ce0b471a1"
+};
+
+let v8Auth = null;
+let v8Db = null;
+let v8User = null;
+let v8RoomCode = null;
+let v8RoomUnsub = null;
+let v8MembersUnsub = null;
+let v8IsHost = false;
+
+function initFirebaseV8(){
+  try{
+    if(!window.firebase){
+      throw new Error("Le SDK Firebase n'a pas pu être chargé. Vérifie ta connexion Internet.");
+    }
+    // Les émulateurs ne sont utilisés que sur la page de test avec ?emulator=1.
+    const emulatorMode = new URLSearchParams(window.location.search).get('emulator') === '1';
+    const firebaseConfig = emulatorMode
+      ? { ...FIREBASE_CONFIG_V8, projectId: 'demo-le-canon-v9' }
+      : FIREBASE_CONFIG_V8;
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    v8Auth = firebase.auth();
+    v8Db = firebase.firestore();
+    if(emulatorMode){
+      v8Auth.useEmulator('http://127.0.0.1:9099');
+      v8Db.useEmulator('127.0.0.1', 8080);
+    }
+    return true;
+  }catch(err){
+    console.error(err);
+    setOnlineStatus("Erreur Firebase : " + err.message, true);
+    return false;
+  }
+}
+
+function setOnlineStatus(message, isError){
+  const el = document.getElementById('online-status');
+  if(el){
+    el.textContent = message;
+    el.style.color = isError ? 'var(--red)' : 'var(--green)';
+  }
+}
+
+async function ensureOnlineUser(){
+  if(!v8Auth || !v8Db) {
+    if(!initFirebaseV8()) throw new Error("Firebase n'est pas initialisé.");
+  }
+  if(v8Auth.currentUser) {
+    v8User = v8Auth.currentUser;
+    return v8User;
+  }
+  const credential = await v8Auth.signInAnonymously();
+  v8User = credential.user;
+  return v8User;
+}
+
+function onlinePlayerName(){
+  const input = document.getElementById('online-name');
+  return (input && input.value.trim()) || 'Vigneron';
+}
+
+function makeRoomCode(){
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for(let i=0;i<6;i++) code += alphabet[Math.floor(Math.random()*alphabet.length)];
+  return code;
+}
+
+async function createOnlineRoom(){
+  try{
+    setOnlineStatus("Connexion à Firebase…");
+    await ensureOnlineUser();
+    const name = onlinePlayerName().slice(0,18);
+    let code = makeRoomCode();
+    let roomRef = v8Db.collection('rooms').doc(code);
+    // Évite d'écraser un salon existant.
+    for(let tries=0; tries<8 && (await roomRef.get()).exists; tries++){
+      code = makeRoomCode();
+      roomRef = v8Db.collection('rooms').doc(code);
+    }
+    if((await roomRef.get()).exists) throw new Error("Impossible de créer un code disponible. Réessaie.");
+    await roomRef.set({
+      code,
+      hostUid: v8User.uid,
+      status: 'waiting',
+      maxPlayers: 4,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      version: 9
+    });
+    await roomRef.collection('members').doc(v8User.uid).set({
+      uid: v8User.uid,
+      name,
+      role: 'host',
+      joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    v8IsHost = true;
+    attachOnlineRoom(code);
+    setOnlineStatus("");
+  }catch(err){
+    console.error(err);
+    setOnlineStatus(firebaseFriendlyError(err), true);
+  }
+}
+
+async function joinOnlineRoom(){
+  try{
+    const code = (document.getElementById('online-code').value || '').trim().toUpperCase();
+    if(!/^[A-HJ-NP-Z2-9]{6}$/.test(code)){
+      setOnlineStatus("Entre un code valide de 6 caractères.", true);
+      return;
+    }
+    setOnlineStatus("Recherche du salon…");
+    await ensureOnlineUser();
+    const roomRef = v8Db.collection('rooms').doc(code);
+    const roomSnap = await roomRef.get();
+    if(!roomSnap.exists) throw new Error("Salon introuvable. Vérifie le code.");
+    const room = roomSnap.data();
+    if(room.status !== 'waiting') throw new Error("Ce salon n'accepte plus de joueurs.");
+    const membersRef = roomRef.collection('members');
+    const existing = await membersRef.doc(v8User.uid).get();
+    if(!existing.exists){
+      const members = await membersRef.get();
+      if(members.size >= Math.min(Number(room.maxPlayers)||4,4)) throw new Error("Ce salon est complet (4 joueurs maximum).");
+      await membersRef.doc(v8User.uid).set({
+        uid: v8User.uid,
+        name: onlinePlayerName().slice(0,18),
+        role: 'player',
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    v8IsHost = room.hostUid === v8User.uid;
+    attachOnlineRoom(code);
+    setOnlineStatus("");
+  }catch(err){
+    console.error(err);
+    setOnlineStatus(firebaseFriendlyError(err), true);
+  }
+}
+
+function attachOnlineRoom(code){
+  detachOnlineRoomListeners();
+  v8RoomCode = code;
+  document.getElementById('online-room-code').textContent = code;
+  go('p-online-lobby');
+
+  const roomRef = v8Db.collection('rooms').doc(code);
+  v8RoomUnsub = roomRef.onSnapshot((snap)=>{
+    if(!snap.exists){
+      document.getElementById('online-room-message').innerHTML = '<p>Ce salon n’existe plus.</p>';
+      return;
+    }
+    const room = snap.data();
+    const msg = room.status === 'waiting'
+      ? 'En attente des autres joueurs. Le salon accepte jusqu’à 4 participants.'
+      : 'Le salon a été marqué comme prêt.';
+    document.getElementById('online-room-message').innerHTML = '<p></p>';
+    document.querySelector('#online-room-message p').textContent = msg;
+  }, (err)=>{
+    console.error(err);
+    document.getElementById('online-room-message').textContent = firebaseFriendlyError(err);
+  });
+
+  v8MembersUnsub = roomRef.collection('members').orderBy('joinedAt').onSnapshot((snap)=>{
+    const hostEl = document.getElementById('online-members');
+    hostEl.innerHTML = '';
+    if(snap.empty){
+      hostEl.innerHTML = '<p>Aucun joueur connecté.</p>';
+      return;
+    }
+    snap.forEach(doc=>{
+      const member = doc.data();
+      const line = document.createElement('div');
+      line.className = 'online-member';
+      const dot = document.createElement('span');
+      dot.className = 'online-dot';
+      const label = document.createElement('span');
+      label.textContent = (member.name || 'Vigneron') + (member.role === 'host' ? ' — Hôte' : '');
+      line.append(dot,label);
+      hostEl.appendChild(line);
+    });
+    const count = document.createElement('p');
+    count.className = 'online-code-note';
+    count.textContent = snap.size + ' / 4 joueur(s) connecté(s)';
+    hostEl.appendChild(count);
+  }, (err)=>{
+    console.error(err);
+    document.getElementById('online-members').textContent = firebaseFriendlyError(err);
+  });
+}
+
+function detachOnlineRoomListeners(){
+  if(v8RoomUnsub){ v8RoomUnsub(); v8RoomUnsub=null; }
+  if(v8MembersUnsub){ v8MembersUnsub(); v8MembersUnsub=null; }
+}
+
+async function copyRoomCode(){
+  if(!v8RoomCode) return;
+  try{
+    await navigator.clipboard.writeText(v8RoomCode);
+    toast("Code copié !");
+  }catch(e){
+    toast("Code du salon : " + v8RoomCode);
+  }
+}
+
+async function leaveOnlineRoom(){
+  try{
+    detachOnlineRoomListeners();
+    if(v8RoomCode && v8User && v8Db){
+      const roomRef = v8Db.collection('rooms').doc(v8RoomCode);
+      await roomRef.collection('members').doc(v8User.uid).delete().catch(()=>{});
+      if(v8IsHost){
+        // Le salon hôte est supprimé proprement avec sa collection de membres.
+        const members = await roomRef.collection('members').get();
+        const batch = v8Db.batch();
+        members.forEach(d=>batch.delete(d.ref));
+        batch.delete(roomRef);
+        await batch.commit();
+      }
+    }
+  }catch(err){ console.warn("Sortie du salon :",err); }
+  v8RoomCode = null;
+  v8IsHost = false;
+  go('p-home');
+}
+
+function firebaseFriendlyError(err){
+  const code = err && err.code ? err.code : '';
+  if(code === 'permission-denied' || code === 'firestore/permission-denied'){
+    return "Accès refusé par les règles Firestore. Les règles V9 doivent être fusionnées aux règles des salons avant de rejoindre une partie.";
+  }
+  if(code === 'auth/operation-not-allowed'){
+    return "La connexion anonyme n'est pas activée dans Firebase Authentication.";
+  }
+  if(code === 'unavailable' || code === 'firestore/unavailable'){
+    return "Firebase est momentanément inaccessible. Vérifie ta connexion Internet.";
+  }
+  return (err && err.message) ? err.message : "Une erreur Firebase est survenue.";
+}
+
+// Remplace le sélecteur de mode pour afficher le troisième mode.
+const selectModeV8Original = selectMode;
+selectMode = function(mode){
+  selectModeV8Original(mode === 'online' ? 'multi' : mode);
+  document.getElementById('multi-fields').style.display = mode === 'multi' ? 'block' : 'none';
+  document.getElementById('online-fields').style.display = mode === 'online' ? 'block' : 'none';
+  ['mode-solo','mode-multi','mode-online'].forEach(id=>{
+    const b=document.getElementById(id);
+    const active = id === 'mode-' + mode;
+    b.style.background = active ? 'var(--gold)' : '';
+    b.style.color = active ? '#1a0a2e' : '';
+  });
+};
+
+// Initialise les SDK sans ouvrir de connexion anonyme avant une action du joueur.
+window.addEventListener('load', ()=>{
+  if(!initFirebaseV8()){
+    setOnlineStatus("Firebase indisponible. Le mode solo et le mode local restent utilisables.", true);
+  }
+});
+
+</script>
+<script src="multiplayer-v9.js"></script>
+<script src="multiplayer-v9-adapter.js"></script>
+<script src="multiplayer-v9-controller.js"></script>
+</body>
+</html>

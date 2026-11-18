@@ -1,0 +1,15 @@
+// ATTENTION — ARCHIVE / BROUILLON OBSOLÈTE
+// Ne pas copier ni publier ces règles.
+// Elles utilisent les anciens chemins public/ et privateHands/ qui ne correspondent
+// plus au module multiplayer-v9.js.
+//
+// Le schéma de travail actuel est décrit dans :
+// firestore.v9.rules (fragment testé dans l’émulateur, à fusionner avec V8)
+// docs/firestore-rules-v9-draft.md
+// rooms/{code}/game/state
+// rooms/{code}/private/{uid}
+// rooms/{code}/actions/{actionId}
+//
+// Les règles V8 actuellement publiées doivent rester en place tant que la V9
+// n'est pas intégrée et testée. Le brouillon actuel n'est pas une protection
+// anti-triche complète et doit être audité avant publication.
